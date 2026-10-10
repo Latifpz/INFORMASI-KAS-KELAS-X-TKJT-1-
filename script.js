@@ -4242,7 +4242,7 @@ function onAction(e) {
     if (session.role !== "bendahara") return;
     confirmAction("Reset password akun?", "Password akun akan diatur menjadi kas12345.", () => {
       const account = DB.accounts.find((a) => a.id === id);
-      if (account) { account.passHash = hashPass("kas12345"); saveDB(); alert("Password akun berhasil direset menjadi kas12345."); }
+      if (account) { account.passHash = hashPass("reset"); saveDB(); alert("Password akun berhasil direset menjadi reset."); }
       render();
     });
     return;
