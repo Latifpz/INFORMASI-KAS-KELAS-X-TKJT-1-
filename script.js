@@ -3674,7 +3674,7 @@ function pageKelolaAkun() {
       ${accounts.map(a => `<tr><td>${esc(a.nama)}</td><td>${esc(a.username)}</td><td>${a.role === "bendahara" ? esc(a.jabatan || "Bendahara") : "Siswa"}</td><td><div class="form-actions"><button class="btn btn-outline btn-sm" data-act="resetAkun" data-id="${a.id}">Reset password</button>${a.id !== session.id ? `<button class="btn btn-danger btn-sm" data-act="hapusAkun" data-id="${a.id}">Hapus</button>` : `<span class="muted">Akun Anda</span>`}</div></td></tr>`).join("")}
       </tbody></table></div>` : `<div class="empty">Belum ada akun terdaftar.</div>`}
     </div>
-    <div class="form-card"><h3>ℹ️ Informasi</h3><p class="muted">Reset password akan mengatur password akun menjadi <strong>kas12345</strong>. Sarankan pemilik akun segera menggantinya di Pengaturan.</p></div>
+    <div class="form-card"><h3>ℹ️ Informasi</h3><p class="muted">Reset password akan mengatur password akun menjadi <strong>reset</strong>. Sarankan pemilik akun segera menggantinya di Pengaturan.</p></div>
   `;
 }
 
@@ -4240,7 +4240,7 @@ function onAction(e) {
   /* KELOLA AKUN - khusus bendahara */
   if (act === "resetAkun") {
     if (session.role !== "bendahara") return;
-    confirmAction("Reset password akun?", "Password akun akan diatur menjadi kas12345.", () => {
+    confirmAction("Reset password akun?", "Password akun akan diatur menjadi reset.", () => {
       const account = DB.accounts.find((a) => a.id === id);
       if (account) { account.passHash = hashPass("reset"); saveDB(); alert("Password akun berhasil direset menjadi reset."); }
       render();
