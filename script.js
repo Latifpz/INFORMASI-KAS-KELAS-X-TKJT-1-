@@ -547,17 +547,17 @@ function renderLogin() {
           <div class="brand">
 
             <div class="brand-mark">
-              TJ
+              TKJ
             </div>
 
             <div class="brand-text">
 
               <div class="t1">
-                Kas TKJT 1
+                Informasi Kas 
               </div>
 
               <div class="t2">
-                Kelas Teknik Jaringan
+                Kelas X TKJT 1 
               </div>
 
             </div>
@@ -635,7 +635,7 @@ function renderLogin() {
               <input
                 name="username"
                 autocomplete="username"
-                placeholder="mis. abdurrahman01"
+                placeholder="misal.abdurrahman"
                 required
               >
 
@@ -714,17 +714,17 @@ function renderRegister() {
           <div class="brand">
 
             <div class="brand-mark">
-              TJ
+              TKJ
             </div>
 
             <div class="brand-text">
 
               <div class="t1">
-                Kas TKJT 1
+                Informasi Kas 
               </div>
 
               <div class="t2">
-                Kelas Teknik Jaringan
+                Kelas X TKJT 1 
               </div>
 
             </div>
@@ -1071,13 +1071,13 @@ function renderShell() {
       <div class="brand">
 
         <div class="brand-mark">
-          TJ
+          TKJ 
         </div>
 
         <div class="brand-text">
 
           <div class="t1">
-            Kas TKJT 1
+            Informasi Kas X TKJT 1 
           </div>
 
           <div class="t2">
