@@ -635,7 +635,7 @@ function renderLogin() {
               <input
                 name="username"
                 autocomplete="username"
-                placeholder="misal.abdurrahman"
+                placeholder="misal. abdurrahman"
                 required
               >
 
