@@ -62,9 +62,7 @@ const BENDAHARA_MASTER = [
 
 const KATEGORI_PENGELUARAN = [
   "Konsumsi",
-  "ATK & Perlengkapan",
-  "Sewa & Acara",
-  "Hewan & Kurban",
+  "ATK DAN PERLENGKAPAN",
   "Kebersihan",
   "Lainnya",
 ];
@@ -194,7 +192,7 @@ function loadDB() {
 let DB = loadDB();
 
 /* ==========================================
-   PAKSA KURBAN Rp1.000 / HARI
+    KURBAN Rp1.000 / HARI
 ========================================== */
 
 DB.settings.nominal.Kurban = {
@@ -282,11 +280,120 @@ function rupiah(number) {
 }
 
 function todayStr() {
-  return new Date().toISOString().slice(0, 10);
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
-function monthKey(date) {
-  return String(date || "").slice(0, 7);
+function parseKasDate(value) {
+  // Normalisasi tanggal transaksi tanpa mengubahnya melalui UTC.
+  // Mendukung format utama YYYY-MM-DD, ISO datetime, serta format lama DD/MM/YYYY.
+  const raw = String(value == null ? "" : value).trim();
+  if (!raw) return null;
+
+  let year, month, day, match;
+  match = raw.match(/^(\d{4})-(\d{1,2})-(\d{1,2})(?=$|[T\s])/);
+  if (match) {
+    year = Number(match[1]);
+    month = Number(match[2]);
+    day = Number(match[3]);
+  } else {
+    match = raw.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})$/);
+    if (!match) return null;
+    day = Number(match[1]);
+    month = Number(match[2]);
+    year = Number(match[3]);
+  }
+
+  if (
+    !Number.isInteger(year) ||
+    !Number.isInteger(month) ||
+    !Number.isInteger(day)
+  )
+    return null;
+  if (year < 1900 || month < 1 || month > 12 || day < 1 || day > 31)
+    return null;
+
+  const check = new Date(year, month - 1, day);
+  if (
+    check.getFullYear() !== year ||
+    check.getMonth() !== month - 1 ||
+    check.getDate() !== day
+  )
+    return null;
+
+  const yyyy = String(year).padStart(4, "0");
+  const mm = String(month).padStart(2, "0");
+  const dd = String(day).padStart(2, "0");
+  return {
+    year,
+    month,
+    day,
+    iso: `${yyyy}-${mm}-${dd}`,
+    monthKey: `${yyyy}-${mm}`,
+  };
+}
+
+function dateOnlyKey(value) {
+  return parseKasDate(value)?.iso || "";
+}
+
+// Kunci bulan "YYYY-MM" dari tanggal transaksi.
+// Dipakai dashboard, status pembayaran, dan dashboard siswa.
+function monthKey(value) {
+  return parseKasDate(value)?.monthKey || "";
+}
+
+function normalizedText(value) {
+  return String(value == null ? "" : value)
+    .trim()
+    .replace(/\s+/g, " ")
+    .toLocaleUpperCase("id-ID");
+}
+
+function paymentMatchesDay(
+  payment,
+  studentName,
+  year,
+  month,
+  day,
+  pos = ui.pos,
+) {
+  if (!payment) return false;
+  if (normalizedText(payment.pos) !== normalizedText(pos)) return false;
+  if (normalizedText(payment.siswa) !== normalizedText(studentName))
+    return false;
+
+  const date = parseKasDate(payment.tanggal);
+  // Jangan memakai nomor hari saja: tahun, bulan, dan hari wajib cocok seluruhnya.
+  return (
+    !!date &&
+    date.year === Number(year) &&
+    date.month === Number(month) &&
+    date.day === Number(day)
+  );
+}
+
+function calendarMonthHasPayment(payment, studentName, year, month, weekly) {
+  if (!payment) return false;
+  if (normalizedText(payment.pos) !== normalizedText(ui.pos)) return false;
+  if (normalizedText(payment.siswa) !== normalizedText(studentName))
+    return false;
+
+  const date = parseKasDate(payment.tanggal);
+  const targetYear = Number(year);
+  const targetMonth = Number(month);
+
+  // Filter tahun lebih dahulu agar tahun berbeda tidak pernah saling mencentang.
+  if (!date || date.year !== targetYear) return false;
+  if (!weekly) return date.month === targetMonth;
+
+  // Kalender mingguan memiliki satu penanda per bulan; penanda bulan hanya
+  // aktif apabila transaksi ada pada minggu pertama bulan tersebut di tahun itu.
+  const anchor = `${targetYear}-${String(targetMonth).padStart(2, "0")}-01`;
+  return date.month === targetMonth && weekKey(date.iso) === weekKey(anchor);
 }
 
 function weekKey(date) {
@@ -553,11 +660,11 @@ function renderLogin() {
             <div class="brand-text">
 
               <div class="t1">
-                Informasi Kas 
+                Informasi Kas Kelas X TKJT 1
               </div>
 
               <div class="t2">
-                Kelas X TKJT 1 
+                Kelas Teknik Jaringan
               </div>
 
             </div>
@@ -720,11 +827,11 @@ function renderRegister() {
             <div class="brand-text">
 
               <div class="t1">
-                Informasi Kas 
+                Informasi Kas Kelas
               </div>
 
               <div class="t2">
-                Kelas X TKJT 1 
+                Kelas X TKJT 1
               </div>
 
             </div>
@@ -938,6 +1045,7 @@ const NAV = [
     id: "kalender",
     ic: "🗓️",
     label: "Kalender",
+    bendaharaOnly: true,
   },
 
   {
@@ -1028,8 +1136,9 @@ function renderShell() {
 
       </div>
 
-      ${NAV.filter((nav) => !nav.bendaharaOnly || session.role === "bendahara").map(
-        (nav) => `
+      ${NAV.filter((nav) => !nav.bendaharaOnly || session.role === "bendahara")
+        .map(
+          (nav) => `
           <button
             class="
               navitem
@@ -1039,7 +1148,7 @@ function renderShell() {
             data-view="${nav.id}"
           >
 
-                     <span class="ic">
+            <span class="ic">
               ${nav.ic}
             </span>
 
@@ -1047,7 +1156,8 @@ function renderShell() {
 
           </button>
         `,
-      ).join("")}
+        )
+        .join("")}
 
     </aside>
 
@@ -1071,13 +1181,13 @@ function renderShell() {
       <div class="brand">
 
         <div class="brand-mark">
-          TKJ 
+          TKJ
         </div>
 
         <div class="brand-text">
 
           <div class="t1">
-            Informasi Kas X TKJT 1 
+            Kas TKJT 1
           </div>
 
           <div class="t2">
@@ -1143,8 +1253,11 @@ function renderShell() {
         "
       >
 
-        ${NAV.filter((nav) => !nav.bendaharaOnly || session.role === "bendahara").map(
-          (nav) => `
+        ${NAV.filter(
+          (nav) => !nav.bendaharaOnly || session.role === "bendahara",
+        )
+          .map(
+            (nav) => `
             <button
               class="
                 navitem
@@ -1162,7 +1275,8 @@ function renderShell() {
 
             </button>
           `,
-        ).join("")}
+          )
+          .join("")}
 
       </aside>
 
@@ -1201,7 +1315,7 @@ function renderPage() {
       return pageTarget();
 
     case "kalender":
-      return pageKalender();
+      return session.role === "bendahara" ? pageKalender() : pageDashboard();
 
     case "qris":
       return pageQris();
@@ -1715,16 +1829,20 @@ function statusPembayaranBlock(pos) {
 
   const lunas = SISWA_MASTER.filter((name) =>
     DB.kasMasuk.some((x) => {
-      if (x.pos !== pos || x.siswa !== name) {
+      if (
+        normalizedText(x.pos) !== normalizedText(pos) ||
+        normalizedText(x.siswa) !== normalizedText(name)
+      ) {
         return false;
       }
 
       if (nom.frekuensi === "Harian") {
-        return x.tanggal === period;
+        return dateOnlyKey(x.tanggal) === period;
       }
 
       if (nom.frekuensi === "Mingguan") {
-        return weekKey(x.tanggal) === period;
+        const normalizedDate = dateOnlyKey(x.tanggal);
+        return !!normalizedDate && weekKey(normalizedDate) === period;
       }
 
       return monthKey(x.tanggal) === period;
@@ -2095,7 +2213,7 @@ function pageKasMasuk() {
                       <button
                         type="button"
                         class="
-                                                btn
+                          btn
                           btn-outline
                         "
                         data-act="cancelEditKas"
@@ -2755,7 +2873,7 @@ function pageTarget() {
                   <input
                     name="nama"
                     required
-                    placeholder="Mis. Kunjungan Industri"
+                    placeholder="Misal. Baju kelas"
                     value="${editing ? esc(editing.nama) : ""}"
                   >
 
@@ -2987,7 +3105,7 @@ function pageTarget() {
                     </div>
 
                     <div
-                                         class="nums"
+                      class="nums"
                     >
 
                       <span>
@@ -3019,15 +3137,11 @@ function pageTarget() {
 ============================================================ */
 
 function calendarYears() {
-  return [2026, 2027];
+  return [2026, 2027, 2028];
 }
 
 function pageKalender() {
   const meta = posMeta(ui.pos);
-  // Siswa hanya melihat data kalender miliknya sendiri.
-  const calendarStudents = session && session.role === "siswa"
-    ? [session.nama]
-    : SISWA_MASTER;
 
   const nom = nominalPos(ui.pos);
 
@@ -3107,11 +3221,10 @@ function pageKalender() {
       },
     );
 
-    const rows = calendarStudents.map((name) => {
+    const rows = SISWA_MASTER.map((name) => {
       const paidCount = tanggalList.filter((item) =>
-        DB.kasMasuk.some(
-          (x) =>
-            x.pos === ui.pos && x.siswa === name && x.tanggal === item.tanggal,
+        DB.kasMasuk.some((x) =>
+          paymentMatchesDay(x, name, year, month, item.nomor, ui.pos),
         ),
       ).length;
 
@@ -3153,11 +3266,15 @@ function pageKalender() {
 
                   ${tanggalList
                     .map((item) => {
-                      const paid = DB.kasMasuk.some(
-                        (x) =>
-                          x.pos === ui.pos &&
-                          x.siswa === name &&
-                          x.tanggal === item.tanggal,
+                      const paid = DB.kasMasuk.some((x) =>
+                        paymentMatchesDay(
+                          x,
+                          name,
+                          year,
+                          month,
+                          item.nomor,
+                          ui.pos,
+                        ),
                       );
 
                       return `
@@ -3226,11 +3343,7 @@ function pageKalender() {
               📅 Tahun
             </label>
 
-            <select
-              data-act-change="
-                setKalenderTahun
-              "
-            >
+            <select data-act-change="setKalenderTahun">
 
               ${years
                 .map(
@@ -3255,11 +3368,7 @@ function pageKalender() {
               🗓️ Bulan
             </label>
 
-            <select
-              data-act-change="
-                setKalenderBulan
-              "
-            >
+            <select data-act-change="setKalenderBulan">
 
               ${Array.from(
                 {
@@ -3355,15 +3464,10 @@ function pageKalender() {
     (_, i) => `${year}-${String(i + 1).padStart(2, "0")}`,
   );
 
-  const rows = calendarStudents.map((name) => {
-    const paid = months.filter((month) =>
-      DB.kasMasuk.some(
-        (x) =>
-          x.pos === ui.pos &&
-          x.siswa === name &&
-          (weekly
-            ? weekKey(x.tanggal) === weekKey(month + "-01")
-            : monthKey(x.tanggal) === month),
+  const rows = SISWA_MASTER.map((name) => {
+    const paid = months.filter((monthKeyText, index) =>
+      DB.kasMasuk.some((x) =>
+        calendarMonthHasPayment(x, name, year, index + 1, weekly),
       ),
     );
 
@@ -3404,13 +3508,8 @@ function pageKalender() {
 
                 ${months
                   .map((month, index) => {
-                    const isPaid = DB.kasMasuk.some(
-                      (x) =>
-                        x.pos === ui.pos &&
-                        x.siswa === name &&
-                        (weekly
-                          ? weekKey(x.tanggal) === weekKey(month + "-01")
-                          : monthKey(x.tanggal) === month),
+                    const isPaid = DB.kasMasuk.some((x) =>
+                      calendarMonthHasPayment(x, name, year, index + 1, weekly),
                     );
 
                     return `
@@ -3462,11 +3561,7 @@ function pageKalender() {
           📅 Pilih tahun
         </label>
 
-        <select
-          data-act-change="
-            setKalenderTahun
-          "
-        >
+        <select data-act-change="setKalenderTahun">
 
           ${years
             .map(
@@ -3666,13 +3761,23 @@ function pageQris() {
 
 function pageKelolaAkun() {
   if (!session || session.role !== "bendahara") return pageDashboard();
-  const accounts = DB.accounts.slice().sort((a,b) => String(a.role).localeCompare(String(b.role)) || String(a.nama).localeCompare(String(b.nama)));
+  const accounts = DB.accounts
+    .slice()
+    .sort(
+      (a, b) =>
+        String(a.role).localeCompare(String(b.role)) ||
+        String(a.nama).localeCompare(String(b.nama)),
+    );
   return `
     <div class="page-head"><h1>Kelola Akun</h1><p>Fitur ini hanya tersedia untuk bendahara. Lihat akun terdaftar, ubah peran tidak tersedia, dan reset password akun.</p></div>
     <div class="form-card"><h3>👥 Daftar akun (${accounts.length})</h3>
-      ${accounts.length ? `<div class="table-wrap"><table><thead><tr><th>Nama</th><th>Username</th><th>Peran</th><th>Aksi</th></tr></thead><tbody>
-      ${accounts.map(a => `<tr><td>${esc(a.nama)}</td><td>${esc(a.username)}</td><td>${a.role === "bendahara" ? esc(a.jabatan || "Bendahara") : "Siswa"}</td><td><div class="form-actions"><button class="btn btn-outline btn-sm" data-act="resetAkun" data-id="${a.id}">Reset password</button>${a.id !== session.id ? `<button class="btn btn-danger btn-sm" data-act="hapusAkun" data-id="${a.id}">Hapus</button>` : `<span class="muted">Akun Anda</span>`}</div></td></tr>`).join("")}
-      </tbody></table></div>` : `<div class="empty">Belum ada akun terdaftar.</div>`}
+      ${
+        accounts.length
+          ? `<div class="table-wrap"><table><thead><tr><th>Nama</th><th>Username</th><th>Peran</th><th>Aksi</th></tr></thead><tbody>
+      ${accounts.map((a) => `<tr><td>${esc(a.nama)}</td><td>${esc(a.username)}</td><td>${a.role === "bendahara" ? esc(a.jabatan || "Bendahara") : "Siswa"}</td><td><div class="form-actions"><button class="btn btn-outline btn-sm" data-act="resetAkun" data-id="${a.id}">Reset password</button>${a.id !== session.id ? `<button class="btn btn-danger btn-sm" data-act="hapusAkun" data-id="${a.id}">Hapus</button>` : `<span class="muted">Akun Anda</span>`}</div></td></tr>`).join("")}
+      </tbody></table></div>`
+          : `<div class="empty">Belum ada akun terdaftar.</div>`
+      }
     </div>
     <div class="form-card"><h3>ℹ️ Informasi</h3><p class="muted">Reset password akan mengatur password akun menjadi <strong>reset</strong>. Sarankan pemilik akun segera menggantinya di Pengaturan.</p></div>
   `;
@@ -3947,7 +4052,7 @@ function pagePengaturan() {
 
                             <input
                               type="number"
-                                                        name="nominal"
+                              name="nominal"
                               min="0"
                               value="${myNom.jumlah}"
                               required
@@ -4018,7 +4123,9 @@ function afterRender() {
 function onActionChange(e) {
   const el = e.currentTarget;
 
-  const act = el.dataset.actChange;
+  // trim(): jaga-jaga bila nilai atribut berisi spasi/baris baru
+  // (kalau tidak, pilihan Tahun/Bulan di Kalender tidak akan pernah cocok).
+  const act = String(el.dataset.actChange || "").trim();
 
   if (act === "setKalenderTahun") {
     ui.kalenderTahun = Number(e.target.value) || 2026;
@@ -4111,7 +4218,11 @@ function onAction(e) {
   /* NAV */
 
   if (act === "nav") {
-    if (el.dataset.view === "kelolaakun" && session.role !== "bendahara") return;
+    if (
+      ["kelolaakun", "kalender"].includes(el.dataset.view) &&
+      session.role !== "bendahara"
+    )
+      return;
     ui.view = el.dataset.view;
 
     ui.mobileMenuOpen = false;
@@ -4240,19 +4351,32 @@ function onAction(e) {
   /* KELOLA AKUN - khusus bendahara */
   if (act === "resetAkun") {
     if (session.role !== "bendahara") return;
-    confirmAction("Reset password akun?", "Password akun akan diatur menjadi reset.", () => {
-      const account = DB.accounts.find((a) => a.id === id);
-      if (account) { account.passHash = hashPass("reset"); saveDB(); alert("Password akun berhasil direset menjadi reset."); }
-      render();
-    });
+    confirmAction(
+      "Reset password akun?",
+      "Password akun akan diatur menjadi reset.",
+      () => {
+        const account = DB.accounts.find((a) => a.id === id);
+        if (account) {
+          account.passHash = hashPass("reset");
+          saveDB();
+          alert("Password akun berhasil direset menjadi reset.");
+        }
+        render();
+      },
+    );
     return;
   }
   if (act === "hapusAkun") {
     if (session.role !== "bendahara" || id === session.id) return;
-    confirmAction("Hapus akun?", "Akun ini tidak dapat digunakan lagi untuk login.", () => {
-      DB.accounts = DB.accounts.filter((a) => a.id !== id);
-      saveDB(); render();
-    });
+    confirmAction(
+      "Hapus akun?",
+      "Akun ini tidak dapat digunakan lagi untuk login.",
+      () => {
+        DB.accounts = DB.accounts.filter((a) => a.id !== id);
+        saveDB();
+        render();
+      },
+    );
     return;
   }
 
@@ -4264,7 +4388,9 @@ function onAction(e) {
     if (bukti && bukti.gambar) {
       const win = window.open();
       if (win) {
-        win.document.write(`<title>Bukti QRIS</title><img src="${bukti.gambar}" style="max-width:100%;height:auto;display:block;margin:auto">`);
+        win.document.write(
+          `<title>Bukti QRIS</title><img src="${bukti.gambar}" style="max-width:100%;height:auto;display:block;margin:auto">`,
+        );
         win.document.close();
       } else alert("Izinkan pop-up browser untuk melihat foto bukti.");
     }
