@@ -126,6 +126,8 @@ function defaultDB() {
 
     bukti: [],
 
+    notifications: [],
+
     settings: {
       nominal: {
         Rutin: {
@@ -171,6 +173,10 @@ function loadDB() {
       merged.bukti = [];
     }
 
+    if (!Array.isArray(merged.notifications)) {
+      merged.notifications = [];
+    }
+
     merged.settings = Object.assign(def.settings, parsed.settings || {});
 
     merged.settings.nominal = Object.assign(
@@ -190,6 +196,28 @@ function loadDB() {
 }
 
 let DB = loadDB();
+let periodRefreshTimer = null;
+
+function schedulePeriodRefresh() {
+  if (periodRefreshTimer) clearTimeout(periodRefreshTimer);
+  if (!session) return;
+
+  const now = new Date();
+  const nextMidnight = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate() + 1,
+    0,
+    0,
+    1,
+  );
+  periodRefreshTimer = setTimeout(
+    () => {
+      render();
+    },
+    Math.max(1000, nextMidnight.getTime() - now.getTime()),
+  );
+}
 
 /* ==========================================
     KURBAN Rp1.000 / HARI
@@ -551,6 +579,8 @@ function render() {
   if (ui.confirmDialog) {
     renderConfirmDialog();
   }
+
+  schedulePeriodRefresh();
 }
 
 /* ============================================================
@@ -1040,6 +1070,11 @@ const NAV = [
     ic: "🎯",
     label: "Target",
   },
+  {
+    id: "notifikasi",
+    ic: "🔔",
+    label: "Notifikasi",
+  },
 
   {
     id: "kalender",
@@ -1219,6 +1254,17 @@ function renderShell() {
         </div>
 
         <button
+          class="icon-btn notification-btn"
+          data-act="nav"
+          data-view="notifikasi"
+          title="Buka notifikasi"
+          aria-label="Buka notifikasi"
+        >
+          🔔
+          ${notificationUnreadCount() ? `<span class="notification-count">${notificationUnreadCount() > 99 ? "99+" : notificationUnreadCount()}</span>` : ""}
+        </button>
+
+        <button
           class="icon-btn"
           data-act="toggleTheme"
           title="Ganti tema"
@@ -1314,6 +1360,9 @@ function renderPage() {
     case "target":
       return pageTarget();
 
+    case "notifikasi":
+      return pageNotifikasi();
+
     case "kalender":
       return session.role === "bendahara" ? pageKalender() : pageDashboard();
 
@@ -1384,31 +1433,7 @@ function dashboardUtama() {
 
     </div>
 
-    <div
-      class="grid stat"
-    >
-
-      <div
-        class="
-          card
-          stat-card
-          ${saldoKas() >= 0 ? "pos-good" : "pos-bad"}
-        "
-      >
-
-        <div class="lbl">
-          💼 Saldo semua pos
-        </div>
-
-        <div class="val rp">
-          ${rupiah(saldoKas())}
-        </div>
-
-        <div class="sub">
-          Rutin + Acara + Kurban
-        </div>
-
-      </div>
+    <div class="grid stat stat-three">
 
       <div
         class="
@@ -1780,155 +1805,320 @@ function dashboardSiswa() {
    STATUS PEMBAYARAN
 ============================================================ */
 
+function paymentPeriodForFrequency(frequency) {
+  if (frequency === "Harian") return todayStr();
+  if (frequency === "Mingguan") return weekKey(todayStr());
+  return todayStr().slice(0, 7);
+}
+
+function paymentPeriodDisplay(frequency, period) {
+  if (frequency === "Harian") return fmtDate(period);
+  if (frequency === "Mingguan") return `minggu ${period}`;
+
+  const parts = String(period).split("-");
+  if (parts.length !== 2) return period;
+  const monthDate = new Date(Number(parts[0]), Number(parts[1]) - 1, 1);
+  return monthDate.toLocaleDateString("id-ID", {
+    month: "long",
+    year: "numeric",
+  });
+}
+
+function paymentPeriodDescription(frequency, period) {
+  if (frequency === "Harian")
+    return `tanggal ${paymentPeriodDisplay(frequency, period)}`;
+  if (frequency === "Mingguan") return paymentPeriodDisplay(frequency, period);
+  return `bulan ${paymentPeriodDisplay(frequency, period)}`;
+}
+
+function paymentMatchesPeriod(payment, pos, studentName, frequency, period) {
+  if (!payment) return false;
+  if (normalizedText(payment.pos) !== normalizedText(pos)) return false;
+  if (normalizedText(payment.siswa) !== normalizedText(studentName))
+    return false;
+
+  const paidDate = dateOnlyKey(payment.tanggal);
+  if (!paidDate) return false;
+
+  if (frequency === "Harian") return paidDate === period;
+  if (frequency === "Mingguan") return weekKey(paidDate) === period;
+  return monthKey(paidDate) === period;
+}
+
+function reminderAlreadySent(pos, studentName, period) {
+  return (DB.notifications || []).some(
+    (notification) =>
+      notification.type === "payment-reminder" &&
+      normalizedText(notification.pos) === normalizedText(pos) &&
+      notification.period === period &&
+      normalizedText(notification.recipientName) ===
+        normalizedText(studentName),
+  );
+}
+
+function notificationsForSession() {
+  if (!session) return [];
+  const notifications = Array.isArray(DB.notifications) ? DB.notifications : [];
+
+  if (session.role === "siswa") {
+    return notifications.filter(
+      (notification) =>
+        notification.recipientId === session.id ||
+        normalizedText(notification.recipientName) ===
+          normalizedText(session.nama),
+    );
+  }
+
+  // Bendahara hanya melihat daftar pengingat yang dibuatnya.
+  return notifications.filter(
+    (notification) => notification.senderId === session.id,
+  );
+}
+
+function notificationUnreadCount() {
+  if (!session || session.role !== "siswa") return 0;
+  return notificationsForSession().filter(
+    (notification) => !notification.readAt,
+  ).length;
+}
+
+function pageNotifikasi() {
+  const notifications = notificationsForSession()
+    .slice()
+    .sort((a, b) => Number(b.createdAt || 0) - Number(a.createdAt || 0));
+  const isStudent = session.role === "siswa";
+  const unread = notifications.filter(
+    (notification) => !notification.readAt,
+  ).length;
+
+  return `
+    <div class="page-head">
+      <h1>Notifikasi</h1>
+      <p>${isStudent ? "Pengingat pembayaran dan informasi untuk akunmu." : "Riwayat pengingat pembayaran yang sudah kamu kirim."}</p>
+    </div>
+
+    ${
+      isStudent && unread
+        ? `
+      <div class="form-actions notification-page-actions">
+        <span class="muted">${unread} notifikasi belum dibaca</span>
+        <button class="btn btn-outline btn-sm" data-act="markAllNotificationsRead">Tandai semua dibaca</button>
+      </div>
+    `
+        : ""
+    }
+
+    <div class="notification-list">
+      ${
+        notifications.length
+          ? notifications
+              .map(
+                (notification) => `
+        <article class="card notification-card ${isStudent && !notification.readAt ? "notification-unread" : ""}">
+          <div class="notification-card-head">
+            <strong>${esc(notification.title || "Pengingat pembayaran")}</strong>
+            <span class="badge ${isStudent && !notification.readAt ? "badge-warn" : "badge-info"}">${isStudent ? (notification.readAt ? "Sudah dibaca" : "Belum dibaca") : "Terkirim"}</span>
+          </div>
+          <p>${esc(notification.message || "Ada pengingat pembayaran untukmu.")}</p>
+          <div class="notification-meta">
+            <span>${esc(notification.pos || "Kas")}</span>
+            <span>${esc(new Date(Number(notification.createdAt || Date.now())).toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" }))}</span>
+            ${!isStudent ? `<span>Untuk: ${esc(notification.recipientName || "Siswa")}</span>` : `<span>Dari: ${esc(notification.senderName || "Bendahara")}</span>`}
+          </div>
+          ${isStudent && !notification.readAt ? `<button class="btn btn-outline btn-sm" data-act="markNotificationRead" data-id="${esc(notification.id)}">Tandai dibaca</button>` : ""}
+        </article>
+      `,
+              )
+              .join("")
+          : `
+        <div class="table-wrap"><div class="empty"><div class="big">🔔</div>${isStudent ? "Belum ada notifikasi untuk akun ini." : "Kamu belum mengirim pengingat pembayaran."}</div></div>
+      `
+      }
+    </div>
+  `;
+}
+
 function statusPembayaranBlock(pos) {
   const meta = posMeta(pos);
-
   const nom = nominalPos(pos);
 
   if (nom.frekuensi === "Sesuai kebutuhan") {
     return `
-      <div class="section-title">
-
-        <h2>
-          Kontribusi
-          ${meta.label}
-        </h2>
-
-      </div>
-
-      <div class="table-wrap">
-
-        <div class="empty">
-
-          <div class="big">
-            🎉
-          </div>
-
-          Dana acara dikumpulkan
-          sesuai kebutuhan.
-
-        </div>
-
-      </div>
+      <div class="section-title"><h2>Kontribusi ${meta.label}</h2></div>
+      <div class="table-wrap"><div class="empty"><div class="big">🎉</div>Dana acara dikumpulkan sesuai kebutuhan.</div></div>
     `;
   }
 
-  const period =
-    nom.frekuensi === "Harian"
-      ? todayStr()
-      : nom.frekuensi === "Mingguan"
-        ? weekKey(todayStr())
-        : todayStr().slice(0, 7);
-
-  const label =
-    nom.frekuensi === "Harian"
-      ? "hari ini"
-      : nom.frekuensi === "Mingguan"
-        ? "minggu ini"
-        : "bulan ini";
+  const frequency = nom.frekuensi;
+  const period = paymentPeriodForFrequency(frequency);
+  const periodDisplay = paymentPeriodDisplay(frequency, period);
+  const titlePeriod =
+    frequency === "Harian"
+      ? `hari ini · ${periodDisplay}`
+      : frequency === "Mingguan"
+        ? `${periodDisplay}`
+        : periodDisplay;
 
   const lunas = SISWA_MASTER.filter((name) =>
-    DB.kasMasuk.some((x) => {
-      if (
-        normalizedText(x.pos) !== normalizedText(pos) ||
-        normalizedText(x.siswa) !== normalizedText(name)
-      ) {
-        return false;
-      }
-
-      if (nom.frekuensi === "Harian") {
-        return dateOnlyKey(x.tanggal) === period;
-      }
-
-      if (nom.frekuensi === "Mingguan") {
-        const normalizedDate = dateOnlyKey(x.tanggal);
-        return !!normalizedDate && weekKey(normalizedDate) === period;
-      }
-
-      return monthKey(x.tanggal) === period;
-    }),
+    DB.kasMasuk.some((payment) =>
+      paymentMatchesPeriod(payment, pos, name, frequency, period),
+    ),
   );
+  const unpaid = SISWA_MASTER.filter((name) => !lunas.includes(name));
+  const canRemind =
+    session.role === "bendahara" &&
+    myPos() === pos &&
+    ["Rutin", "Kurban"].includes(pos);
 
   return `
     <div class="section-title">
-
-      <h2>
-        Status pembayaran
-        ${meta.label} -
-        ${label}
-      </h2>
-
-      <span class="muted">
-
-        ${lunas.length}/
-        ${SISWA_MASTER.length}
-        lunas
-
-      </span>
-
+      <h2>Status pembayaran ${meta.label} · ${titlePeriod}</h2>
+      <div class="reminder-toolbar">
+        <span class="muted">${lunas.length}/${SISWA_MASTER.length} lunas</span>
+        ${
+          canRemind && unpaid.length
+            ? `
+          <button class="btn btn-primary btn-sm" data-act="sendAllReminders" data-pos="${esc(pos)}" data-frequency="${esc(frequency)}" data-period="${esc(period)}">
+            🔔 Ingatkan semua (${unpaid.length})
+          </button>
+        `
+            : ""
+        }
+      </div>
     </div>
 
     <div class="table-wrap">
-
       <table>
-
-        <thead>
-
-          <tr>
-            <th>Nama</th>
-            <th>Status</th>
-          </tr>
-
-        </thead>
-
+        <thead><tr><th>Nama</th><th>Status</th>${canRemind ? "<th>Pengingat</th>" : ""}</tr></thead>
         <tbody>
-
-          ${SISWA_MASTER.map(
-            (name) => `
+          ${SISWA_MASTER.map((name) => {
+            const isPaid = lunas.includes(name);
+            const sent = reminderAlreadySent(pos, name, period);
+            return `
               <tr>
-
-                <td data-label="Nama">
-                  ${esc(name)}
-                </td>
-
+                <td data-label="Nama">${esc(name)}</td>
                 <td data-label="Status">
-
                   ${
-                    lunas.includes(name)
-                      ? `
-                        <span
-                          class="
-                            badge
-                            badge-ok
-                          "
-                        >
-                          Lunas
-                        </span>
-                      `
-                      : `
-                        <span
-                          class="
-                            badge
-                            badge-warn
-                          "
-                        >
-                          Belum bayar
-                        </span>
-                      `
+                    isPaid
+                      ? `<span class="badge badge-ok">Lunas</span>`
+                      : `<span class="badge badge-warn">Belum bayar</span>`
                   }
-
                 </td>
-
+                ${
+                  canRemind
+                    ? `<td data-label="Pengingat">
+                  ${
+                    isPaid
+                      ? `<span class="muted">—</span>`
+                      : sent
+                        ? `<span class="badge badge-info">Terkirim</span>`
+                        : `<button class="btn btn-outline btn-sm" data-act="sendReminder" data-name="${esc(name)}" data-pos="${esc(pos)}" data-frequency="${esc(frequency)}" data-period="${esc(period)}">Kirim pengingat</button>`
+                  }
+                </td>`
+                    : ""
+                }
               </tr>
-            `,
-          ).join("")}
-
+            `;
+          }).join("")}
         </tbody>
-
       </table>
-
     </div>
   `;
+}
+
+function createPaymentReminder(studentName, pos, frequency, period) {
+  if (!session || session.role !== "bendahara" || myPos() !== pos) return false;
+  if (!["Rutin", "Kurban"].includes(pos)) return false;
+
+  const currentFrequency = nominalPos(pos).frekuensi;
+  const currentPeriod = paymentPeriodForFrequency(currentFrequency);
+  if (frequency !== currentFrequency || period !== currentPeriod) {
+    alert(
+      "Periode pembayaran sudah berubah. Tampilan akan diperbarui, lalu coba lagi.",
+    );
+    render();
+    return false;
+  }
+
+  if (
+    DB.kasMasuk.some((payment) =>
+      paymentMatchesPeriod(payment, pos, studentName, frequency, period),
+    )
+  ) {
+    alert(`${studentName} sudah tercatat lunas untuk periode ini.`);
+    return false;
+  }
+
+  if (reminderAlreadySent(pos, studentName, period)) {
+    alert(`Pengingat untuk ${studentName} sudah dikirim pada periode ini.`);
+    return false;
+  }
+
+  const studentAccount = DB.accounts.find(
+    (account) =>
+      account.role === "siswa" &&
+      normalizedText(account.nama) === normalizedText(studentName),
+  );
+  const nom = nominalPos(pos);
+  const description = paymentPeriodDescription(frequency, period);
+  const title = `Pengingat pembayaran ${pos === "Rutin" ? "Kas Rutin" : "Dana Kurban"}`;
+  const message = `Halo ${studentName}, pembayaran ${pos === "Rutin" ? "Kas Rutin" : "Dana Kurban"} untuk ${description} sebesar ${rupiah(nom.jumlah)} belum tercatat. Silakan lakukan pembayaran atau hubungi bendahara jika sudah membayar.`;
+
+  if (!Array.isArray(DB.notifications)) DB.notifications = [];
+  DB.notifications.push({
+    id: uid(),
+    type: "payment-reminder",
+    recipientId: studentAccount ? studentAccount.id : null,
+    recipientName: studentName,
+    pos,
+    frequency,
+    period,
+    title,
+    message,
+    senderId: session.id,
+    senderName: session.nama,
+    createdAt: Date.now(),
+    readAt: null,
+  });
+  saveDB();
+  return true;
+}
+
+function sendPaymentReminder(studentName, pos, frequency, period) {
+  if (!createPaymentReminder(studentName, pos, frequency, period)) return;
+  render();
+}
+
+function sendAllPaymentReminders(pos, frequency, period) {
+  if (!session || session.role !== "bendahara" || myPos() !== pos) return;
+  if (
+    frequency !== nominalPos(pos).frekuensi ||
+    period !== paymentPeriodForFrequency(frequency)
+  ) {
+    alert(
+      "Periode pembayaran sudah berubah. Tampilan akan diperbarui, lalu coba lagi.",
+    );
+    render();
+    return;
+  }
+
+  const unpaid = SISWA_MASTER.filter(
+    (name) =>
+      !DB.kasMasuk.some((payment) =>
+        paymentMatchesPeriod(payment, pos, name, frequency, period),
+      ) && !reminderAlreadySent(pos, name, period),
+  );
+  let sent = 0;
+  unpaid.forEach((name) => {
+    if (createPaymentReminder(name, pos, frequency, period)) sent++;
+  });
+  saveDB();
+  alert(
+    sent
+      ? `Pengingat berhasil dibuat untuk ${sent} siswa yang belum membayar.`
+      : "Tidak ada pengingat baru. Semua siswa sudah lunas atau sudah diingatkan untuk periode ini.",
+  );
+  render();
 }
 
 /* ============================================================
@@ -4243,6 +4433,53 @@ function onAction(e) {
 
     render();
 
+    return;
+  }
+
+  if (act === "sendReminder") {
+    sendPaymentReminder(
+      el.dataset.name,
+      el.dataset.pos,
+      el.dataset.frequency,
+      el.dataset.period,
+    );
+    return;
+  }
+
+  if (act === "sendAllReminders") {
+    sendAllPaymentReminders(
+      el.dataset.pos,
+      el.dataset.frequency,
+      el.dataset.period,
+    );
+    return;
+  }
+
+  if (act === "markNotificationRead") {
+    if (session.role !== "siswa") return;
+    const notification = (DB.notifications || []).find(
+      (item) => item.id === id,
+    );
+    if (
+      notification &&
+      (notification.recipientId === session.id ||
+        normalizedText(notification.recipientName) ===
+          normalizedText(session.nama))
+    ) {
+      notification.readAt = Date.now();
+      saveDB();
+      render();
+    }
+    return;
+  }
+
+  if (act === "markAllNotificationsRead") {
+    if (session.role !== "siswa") return;
+    notificationsForSession().forEach((notification) => {
+      if (!notification.readAt) notification.readAt = Date.now();
+    });
+    saveDB();
+    render();
     return;
   }
 
