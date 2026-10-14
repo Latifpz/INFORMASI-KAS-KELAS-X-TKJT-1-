@@ -5,7 +5,7 @@
   --ink: #101828;
   --muted: #5b6472;
   --muted-2: #98a2b3;
-  --line: #e3e7ed;
+  --line: c#e3e7ed;
   --line-soft: #eef1f4;
 
   --teal: #215a4b;
@@ -30,9 +30,7 @@
   --amber: #a6741f;
   --amber-soft: #f7eedd;
 
-  --shadow:
-    0 1px 2px rgba(16, 24, 40, 0.04),
-    0 4px 14px rgba(16, 24, 40, 0.06);
+  --shadow: 0 1px 2px rgba(16, 24, 40, 0.04), 0 4px 14px rgba(16, 24, 40, 0.06);
 
   color-scheme: light;
 }
@@ -69,9 +67,7 @@
   --amber: #e8bd73;
   --amber-soft: #3a2e14;
 
-  --shadow:
-    0 1px 2px rgba(0, 0, 0, 0.3),
-    0 8px 20px rgba(0, 0, 0, 0.35);
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 20px rgba(0, 0, 0, 0.35);
 
   color-scheme: dark;
 }
@@ -177,25 +173,20 @@ AUTH
 :root[data-theme="dark"] .auth-card {
   background: rgba(20, 27, 44, 0.8);
 
-  border-color:
-    rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.08);
 }
 
 @keyframes cardIn {
   from {
     opacity: 0;
 
-    transform:
-      translateY(14px)
-      scale(0.98);
+    transform: translateY(14px) scale(0.98);
   }
 
   to {
     opacity: 1;
 
-    transform:
-      translateY(0)
-      scale(1);
+    transform: translateY(0) scale(1);
   }
 }
 
@@ -214,12 +205,7 @@ AUTH
 
   border-radius: 11px;
 
-  background:
-    linear-gradient(
-      135deg,
-      #2f6f5e,
-      #194035
-    );
+  background: linear-gradient(135deg, #2f6f5e, #194035);
 
   display: flex;
 
@@ -228,23 +214,17 @@ AUTH
 
   color: white;
 
-  font-family:
-    "Space Grotesk",
-    sans-serif;
+  font-family: "Space Grotesk", sans-serif;
 
   font-size: 15px;
 
   font-weight: 700;
 
-  box-shadow:
-    0 4px 12px
-    rgba(33, 90, 75, 0.35);
+  box-shadow: 0 4px 12px rgba(33, 90, 75, 0.35);
 }
 
 .brand-text .t1 {
-  font-family:
-    "Space Grotesk",
-    sans-serif;
+  font-family: "Space Grotesk", sans-serif;
 
   font-size: 17px;
 
@@ -304,31 +284,19 @@ AUTH
   bottom: 4px;
   left: 4px;
 
-  width:
-    calc(50% - 8px);
+  width: calc(50% - 8px);
 
   background: var(--surface);
 
   border-radius: 10px;
 
-  box-shadow:
-    0 2px 8px
-    rgba(16, 24, 40, 0.14);
+  box-shadow: 0 2px 8px rgba(16, 24, 40, 0.14);
 
-  transition:
-    transform 0.35s
-    cubic-bezier(
-      0.34,
-      1.56,
-      0.64,
-      1
-    );
+  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-.tabs[data-active="bendahara"]
-  .tab-indicator {
-  transform:
-    translateX(100%);
+.tabs[data-active="bendahara"] .tab-indicator {
+  transform: translateX(100%);
 }
 
 .tabs button {
@@ -384,9 +352,7 @@ AUTH
 
   color: var(--ink);
 
-  border:
-    1px solid
-    var(--line);
+  border: 1px solid var(--line);
 
   border-radius: 10px;
 
@@ -396,14 +362,11 @@ AUTH
 .field input:focus,
 .field select:focus,
 .field textarea:focus {
-  outline:
-    2px solid
-    var(--teal-2);
+  outline: 2px solid var(--teal-2);
 
   outline-offset: 1px;
 
-  border-color:
-    var(--teal-2);
+  border-color: var(--teal-2);
 }
 
 .btn {
@@ -414,9 +377,7 @@ AUTH
 
   gap: 6px;
 
-  border:
-    1px solid
-    transparent;
+  border: 1px solid transparent;
 
   border-radius: 10px;
 
@@ -484,8 +445,7 @@ AUTH
 
   font-weight: 700;
 
-  text-decoration:
-    underline;
+  text-decoration: underline;
 }
 
 .alert {
@@ -497,9 +457,7 @@ AUTH
 
   font-size: 13px;
 
-  border:
-    1px solid
-    transparent;
+  border: 1px solid transparent;
 }
 
 .alert-error {
@@ -531,9 +489,7 @@ AUTH
 
   border-radius: 50%;
 
-  border:
-    1px solid
-    var(--line);
+  border: 1px solid var(--line);
 
   background: var(--surface);
 
@@ -573,12 +529,7 @@ AUTH
   top: -90px;
   left: -90px;
 
-  background:
-    radial-gradient(
-      circle,
-      #2f6f5e,
-      transparent 70%
-    );
+  background: radial-gradient(circle, #2f6f5e, transparent 70%);
 }
 
 .blob2 {
@@ -588,12 +539,7 @@ AUTH
   bottom: -80px;
   right: -70px;
 
-  background:
-    radial-gradient(
-      circle,
-      #3e5c8a,
-      transparent 70%
-    );
+  background: radial-gradient(circle, #3e5c8a, transparent 70%);
 }
 
 .blob3 {
@@ -603,12 +549,7 @@ AUTH
   bottom: 30%;
   left: -60px;
 
-  background:
-    radial-gradient(
-      circle,
-      #6e5aa8,
-      transparent 70%
-    );
+  background: radial-gradient(circle, #6e5aa8, transparent 70%);
 
   opacity: 0.35;
 }
@@ -634,9 +575,7 @@ TOPBAR
 
   background: var(--surface);
 
-  border-bottom:
-    1px solid
-    var(--line);
+  border-bottom: 1px solid var(--line);
 }
 
 .topbar .brand {
@@ -701,8 +640,7 @@ TOPBAR
 
   color: var(--blue);
 
-  font-family:
-    "Space Grotesk";
+  font-family: "Space Grotesk";
 
   font-weight: 700;
 
@@ -718,9 +656,7 @@ TOPBAR
   align-items: center;
   justify-content: center;
 
-  border:
-    1px solid
-    var(--line);
+  border: 1px solid var(--line);
 
   border-radius: 9px;
 
@@ -754,12 +690,9 @@ LAYOUT
 
   top: 57px;
 
-  height:
-    calc(100vh - 57px);
+  height: calc(100vh - 57px);
 
-  border-right:
-    1px solid
-    var(--line);
+  border-right: 1px solid var(--line);
 }
 
 .navitem {
@@ -807,13 +740,9 @@ LAYOUT
 
   min-width: 0;
 
-  padding:
-    28px
-    30px
-    90px;
+  padding: 28px 30px 90px;
 
-  animation:
-    pageIn 0.3s ease;
+  animation: pageIn 0.3s ease;
 }
 
 .page-head {
@@ -852,29 +781,21 @@ CARDS
 
 @media (min-width: 560px) {
   .grid.stat {
-    grid-template-columns:
-      1fr 1fr;
+    grid-template-columns: 1fr 1fr;
   }
 }
 
 @media (min-width: 900px) {
   .grid.stat {
-    grid-template-columns:
-      repeat(
-        4,
-        minmax(0, 1fr)
-      );
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
 
 .card,
 .form-card {
-  background:
-    var(--surface);
+  background: var(--surface);
 
-  border:
-    1px solid
-    var(--line);
+  border: 1px solid var(--line);
 
   border-radius: 18px;
 
@@ -928,8 +849,7 @@ CARDS
 }
 
 .acc-purple {
-  border-color:
-    var(--purple-line);
+  border-color: var(--purple-line);
 }
 
 .acc-purple .val {
@@ -949,8 +869,7 @@ SECTION / TABLE
 
   gap: 10px;
 
-  margin:
-    32px 0 12px;
+  margin: 32px 0 12px;
 }
 
 .section-title h2 {
@@ -968,9 +887,7 @@ SECTION / TABLE
 .table-wrap {
   overflow: hidden;
 
-  border:
-    1px solid
-    var(--line);
+  border: 1px solid var(--line);
 
   border-radius: 18px;
 
@@ -980,13 +897,11 @@ SECTION / TABLE
 table {
   width: 100%;
 
-  border-collapse:
-    collapse;
+  border-collapse: collapse;
 
   font-size: 13px;
 
-  table-layout:
-    fixed;
+  table-layout: fixed;
 }
 
 thead th {
@@ -994,12 +909,9 @@ thead th {
 
   text-align: left;
 
-  background:
-    var(--surface-alt);
+  background: var(--surface-alt);
 
-  border-bottom:
-    1px solid
-    var(--line);
+  border-bottom: 1px solid var(--line);
 
   color: var(--muted);
 
@@ -1013,14 +925,11 @@ thead th {
 tbody td {
   padding: 13px 15px;
 
-  border-bottom:
-    1px solid
-    var(--line-soft);
+  border-bottom: 1px solid var(--line-soft);
 
   vertical-align: middle;
 
-  overflow-wrap:
-    anywhere;
+  overflow-wrap: anywhere;
 }
 
 tbody tr:last-child td {
@@ -1028,8 +937,7 @@ tbody tr:last-child td {
 }
 
 tbody tr:hover {
-  background:
-    var(--surface-alt);
+  background: var(--surface-alt);
 }
 
 .badge {
@@ -1037,8 +945,7 @@ tbody tr:hover {
 
   padding: 3px 9px;
 
-  border-radius:
-    100px;
+  border-radius: 100px;
 
   font-size: 11px;
 
@@ -1048,36 +955,31 @@ tbody tr:hover {
 .badge-ok {
   color: var(--teal);
 
-  background:
-    var(--teal-soft);
+  background: var(--teal-soft);
 }
 
 .badge-warn {
   color: var(--amber);
 
-  background:
-    var(--amber-soft);
+  background: var(--amber-soft);
 }
 
 .badge-info {
   color: var(--blue);
 
-  background:
-    var(--blue-soft);
+  background: var(--blue-soft);
 }
 
 .badge-red {
   color: var(--red);
 
-  background:
-    var(--red-soft);
+  background: var(--red-soft);
 }
 
 .badge-purple {
   color: var(--purple);
 
-  background:
-    var(--purple-soft);
+  background: var(--purple-soft);
 }
 
 .empty {
@@ -1115,21 +1017,18 @@ FORMS
 .form-row {
   display: grid;
 
-  grid-template-columns:
-    1fr;
+  grid-template-columns: 1fr;
 
   gap: 12px;
 }
 
 @media (min-width: 640px) {
   .form-row.cols-2 {
-    grid-template-columns:
-      1fr 1fr;
+    grid-template-columns: 1fr 1fr;
   }
 
   .form-row.cols-3 {
-    grid-template-columns:
-      1fr 1fr 1fr;
+    grid-template-columns: 1fr 1fr 1fr;
   }
 }
 
@@ -1152,12 +1051,9 @@ FORMS
 
   margin-bottom: 18px;
 
-  background:
-    var(--surface-alt);
+  background: var(--surface-alt);
 
-  border:
-    1px dashed
-    var(--line);
+  border: 1px dashed var(--line);
 
   border-radius: 12px;
 
@@ -1177,11 +1073,9 @@ TARGET
 .target-card .top {
   display: flex;
 
-  justify-content:
-    space-between;
+  justify-content: space-between;
 
-  align-items:
-    flex-start;
+  align-items: flex-start;
 
   gap: 8px;
 
@@ -1205,11 +1099,9 @@ TARGET
 .progress-outer {
   height: 9px;
 
-  background:
-    var(--line-soft);
+  background: var(--line-soft);
 
-  border-radius:
-    100px;
+  border-radius: 100px;
 
   overflow: hidden;
 }
@@ -1217,21 +1109,17 @@ TARGET
 .progress-inner {
   height: 100%;
 
-  background:
-    var(--teal);
+  background: var(--teal);
 
-  border-radius:
-    100px;
+  border-radius: 100px;
 
-  transition:
-    width 0.3s ease;
+  transition: width 0.3s ease;
 }
 
 .nums {
   display: flex;
 
-  justify-content:
-    space-between;
+  justify-content: space-between;
 
   margin-top: 7px;
 
@@ -1261,9 +1149,7 @@ QRIS
 
   margin-bottom: 12px;
 
-  border:
-    1px solid
-    var(--line);
+  border: 1px solid var(--line);
 
   border-radius: 12px;
 }
@@ -1275,8 +1161,7 @@ QRIS
 
   aspect-ratio: 1;
 
-  margin:
-    0 auto 12px;
+  margin: 0 auto 12px;
 
   display: flex;
 
@@ -1289,9 +1174,7 @@ QRIS
 
   color: var(--muted);
 
-  border:
-    1.5px dashed
-    var(--line);
+  border: 1.5px dashed var(--line);
 
   border-radius: 12px;
 }
@@ -1309,18 +1192,13 @@ CALENDAR
 .calendar-person {
   padding: 16px;
 
-  background:
-    var(--surface);
+  background: var(--surface);
 
-  border:
-    1px solid
-    var(--line);
+  border: 1px solid var(--line);
 
-  border-radius:
-    18px;
+  border-radius: 18px;
 
-  box-shadow:
-    var(--shadow);
+  box-shadow: var(--shadow);
 }
 
 .calendar-person-head {
@@ -1328,8 +1206,7 @@ CALENDAR
 
   align-items: center;
 
-  justify-content:
-    space-between;
+  justify-content: space-between;
 
   gap: 12px;
 
@@ -1339,18 +1216,13 @@ CALENDAR
 .calendar-person-head strong {
   font-size: 13px;
 
-  overflow-wrap:
-    anywhere;
+  overflow-wrap: anywhere;
 }
 
 .calendar-month-grid {
   display: grid;
 
-  grid-template-columns:
-    repeat(
-      12,
-      minmax(0, 1fr)
-    );
+  grid-template-columns: repeat(12, minmax(0, 1fr));
 
   gap: 7px;
 }
@@ -1367,12 +1239,9 @@ CALENDAR
 
   flex-direction: column;
 
-  background:
-    var(--surface-alt);
+  background: var(--surface-alt);
 
-  border:
-    1px solid
-    var(--line);
+  border: 1px solid var(--line);
 
   border-radius: 10px;
 
@@ -1392,11 +1261,9 @@ CALENDAR
 }
 
 .calendar-period.paid {
-  background:
-    var(--teal-soft);
+  background: var(--teal-soft);
 
-  border-color:
-    var(--teal-line);
+  border-color: var(--teal-line);
 
   color: var(--teal);
 }
@@ -1431,11 +1298,7 @@ CALENDAR
 .calendar-day-grid {
   display: grid;
 
-  grid-template-columns:
-    repeat(
-      7,
-      minmax(0, 1fr)
-    );
+  grid-template-columns: repeat(7, minmax(0, 1fr));
 
   gap: 7px;
 }
@@ -1452,12 +1315,9 @@ CALENDAR
 
   flex-direction: column;
 
-  background:
-    var(--surface-alt);
+  background: var(--surface-alt);
 
-  border:
-    1px solid
-    var(--line);
+  border: 1px solid var(--line);
 
   border-radius: 10px;
 
@@ -1483,11 +1343,9 @@ CALENDAR
 }
 
 .calendar-day.paid {
-  background:
-    var(--teal-soft);
+  background: var(--teal-soft);
 
-  border-color:
-    var(--teal-line);
+  border-color: var(--teal-line);
 
   color: var(--teal);
 }
@@ -1510,8 +1368,7 @@ POS
 
   padding: 4px 10px;
 
-  border-radius:
-    100px;
+  border-radius: 100px;
 
   font-size: 11.5px;
 
@@ -1519,22 +1376,19 @@ POS
 }
 
 .pos-chip.Rutin {
-  background:
-    var(--teal-soft);
+  background: var(--teal-soft);
 
   color: var(--teal);
 }
 
 .pos-chip.Acara {
-  background:
-    var(--blue-soft);
+  background: var(--blue-soft);
 
   color: var(--blue);
 }
 
 .pos-chip.Kurban {
-  background:
-    var(--purple-soft);
+  background: var(--purple-soft);
 
   color: var(--purple);
 }
@@ -1560,14 +1414,11 @@ MOBILE HAMBURGER
   align-items: center;
   justify-content: center;
 
-  border:
-    1px solid
-    var(--line);
+  border: 1px solid var(--line);
 
   border-radius: 10px;
 
-  background:
-    var(--surface);
+  background: var(--surface);
 
   color: var(--ink);
 
@@ -1577,8 +1428,7 @@ MOBILE HAMBURGER
 
   flex-shrink: 0;
 
-  box-shadow:
-    var(--shadow);
+  box-shadow: var(--shadow);
 }
 
 .mobile-menu-overlay {
@@ -1590,8 +1440,7 @@ MOBILE HAMBURGER
 
   z-index: 50;
 
-  background:
-    rgba(16, 24, 40, 0.42);
+  background: rgba(16, 24, 40, 0.42);
 }
 
 .mobile-menu {
@@ -1609,29 +1458,21 @@ MOBILE HAMBURGER
 
   padding: 18px 14px;
 
-  background:
-    var(--surface);
+  background: var(--surface);
 
-  border-right:
-    1px solid
-    var(--line);
+  border-right: 1px solid var(--line);
 
-  box-shadow:
-    8px 0 30px
-    rgba(16, 24, 40, 0.15);
+  box-shadow: 8px 0 30px rgba(16, 24, 40, 0.15);
 
-  transform:
-    translateX(-100%);
+  transform: translateX(-100%);
 
-  transition:
-    transform 0.28s ease;
+  transition: transform 0.28s ease;
 
   overflow-y: auto;
 }
 
 .mobile-menu.open {
-  transform:
-    translateX(0);
+  transform: translateX(0);
 }
 
 .mobile-menu-overlay.open {
@@ -1643,25 +1484,19 @@ MOBILE HAMBURGER
 
   align-items: center;
 
-  justify-content:
-    space-between;
+  justify-content: space-between;
 
   gap: 10px;
 
-  padding:
-    4px 2px 18px;
+  padding: 4px 2px 18px;
 
   margin-bottom: 8px;
 
-  border-bottom:
-    1px solid
-    var(--line);
+  border-bottom: 1px solid var(--line);
 }
 
 .mobile-menu-title {
-  font-family:
-    "Space Grotesk",
-    sans-serif;
+  font-family: "Space Grotesk", sans-serif;
 
   font-size: 17px;
 
@@ -1672,14 +1507,11 @@ MOBILE HAMBURGER
   width: 34px;
   height: 34px;
 
-  border:
-    1px solid
-    var(--line);
+  border: 1px solid var(--line);
 
   border-radius: 9px;
 
-  background:
-    var(--surface);
+  background: var(--surface);
 
   color: var(--ink);
 
@@ -1695,7 +1527,6 @@ MOBILE
 ========================================= */
 
 @media (max-width: 859px) {
-
   .sidebar {
     display: none;
   }
@@ -1705,8 +1536,7 @@ MOBILE
   }
 
   .topbar {
-    justify-content:
-      flex-start;
+    justify-content: flex-start;
 
     gap: 10px;
   }
@@ -1727,15 +1557,11 @@ MOBILE
   }
 
   .main {
-    padding:
-      18px
-      14px
-      40px;
+    padding: 18px 14px 40px;
   }
 }
 
 @media (min-width: 860px) {
-
   .mobile-menu-btn {
     display: none;
   }
@@ -1747,7 +1573,6 @@ MOBILE
 }
 
 @media (max-width: 720px) {
-
   .table-wrap {
     border: none;
 
@@ -1776,18 +1601,13 @@ MOBILE
 
     padding: 10px 13px;
 
-    background:
-      var(--surface);
+    background: var(--surface);
 
-    border:
-      1px solid
-      var(--line);
+    border: 1px solid var(--line);
 
-    border-radius:
-      16px;
+    border-radius: 16px;
 
-    box-shadow:
-      var(--shadow);
+    box-shadow: var(--shadow);
   }
 
   tbody td {
@@ -1801,12 +1621,9 @@ MOBILE
 
     padding: 8px 0;
 
-    text-align:
-      left !important;
+    text-align: left !important;
 
-    border-bottom:
-      1px solid
-      var(--line-soft);
+    border-bottom: 1px solid var(--line-soft);
   }
 
   tbody td:last-child {
@@ -1814,8 +1631,7 @@ MOBILE
   }
 
   tbody td::before {
-    content:
-      attr(data-label);
+    content: attr(data-label);
 
     color: var(--muted);
 
@@ -1823,8 +1639,7 @@ MOBILE
 
     font-weight: 700;
 
-    text-transform:
-      uppercase;
+    text-transform: uppercase;
   }
 
   .calendar-month-grid {
@@ -1869,17 +1684,14 @@ PRINT
 ========================================= */
 
 @media print {
-
   .no-print {
     display: none !important;
   }
 
   body {
-    background:
-      white !important;
+    background: white !important;
 
-    color:
-      black !important;
+    color: black !important;
   }
 
   .layout {
@@ -1897,14 +1709,19 @@ PRINT
   .form-card {
     box-shadow: none !important;
 
-    border-color:
-      #cccccc !important;
+    border-color: #cccccc !important;
   }
 }
 /* Kelola akun dan preview bukti */
-.form-actions { flex-wrap: wrap; }
-.table-wrap { overflow-x: auto; }
-.table-wrap table { min-width: 640px; }
+.form-actions {
+  flex-wrap: wrap;
+}
+.table-wrap {
+  overflow-x: auto;
+}
+.table-wrap table {
+  min-width: 640px;
+}
 
 /* Dialog konfirmasi hapus catatan: selalu tepat di tengah layar */
 #confirmDialogRoot {
