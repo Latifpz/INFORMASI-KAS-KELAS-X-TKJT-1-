@@ -5,7 +5,7 @@
   --ink: #101828;
   --muted: #5b6472;
   --muted-2: #98a2b3;
-  --line: c#e3e7ed;
+  --line: #e3e7ed;
   --line-soft: #eef1f4;
 
   --teal: #215a4b;
@@ -1750,4 +1750,120 @@ PRINT
   max-height: calc(100vh - 40px) !important;
   overflow-y: auto !important;
   box-sizing: border-box !important;
+}
+
+/* =========================================
+   PAYMENT REMINDERS & NOTIFICATION INBOX
+========================================= */
+@media (min-width: 900px) {
+  .grid.stat.stat-three {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.notification-btn {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.notification-count {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  min-width: 17px;
+  height: 17px;
+  padding: 0 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: var(--red);
+  color: #fff;
+  border: 2px solid var(--surface);
+  font-size: 9px;
+  line-height: 1;
+  font-weight: 700;
+}
+
+.reminder-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.reminder-toolbar .btn-primary {
+  width: auto;
+  white-space: nowrap;
+}
+
+.notification-list {
+  display: grid;
+  gap: 12px;
+}
+
+.notification-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.notification-unread {
+  border-color: var(--teal-line);
+  box-shadow:
+    inset 3px 0 0 var(--teal),
+    var(--shadow);
+}
+
+.notification-card-head {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.notification-card-head strong {
+  font-size: 14px;
+}
+
+.notification-card p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.notification-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  color: var(--muted-2);
+  font-size: 11px;
+}
+
+.notification-page-actions {
+  justify-content: space-between;
+  align-items: center;
+  margin: 0 0 14px;
+}
+
+@media (max-width: 640px) {
+  .section-title {
+    align-items: flex-start;
+  }
+
+  .reminder-toolbar {
+    justify-content: flex-start;
+  }
+
+  .reminder-toolbar .btn-primary {
+    white-space: normal;
+  }
+
+  .notification-card-head {
+    align-items: flex-start;
+  }
 }
