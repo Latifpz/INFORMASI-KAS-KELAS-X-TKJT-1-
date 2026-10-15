@@ -126,7 +126,7 @@ function defaultDB() {
 
     bukti: [],
 
-    notifications: [],
+    notifikasi: [],
 
     settings: {
       nominal: {
@@ -173,8 +173,8 @@ function loadDB() {
       merged.bukti = [];
     }
 
-    if (!Array.isArray(merged.notifications)) {
-      merged.notifications = [];
+    if (!Array.isArray(merged.notifikasi)) {
+      merged.notifikasi = [];
     }
 
     merged.settings = Object.assign(def.settings, parsed.settings || {});
@@ -196,28 +196,6 @@ function loadDB() {
 }
 
 let DB = loadDB();
-let periodRefreshTimer = null;
-
-function schedulePeriodRefresh() {
-  if (periodRefreshTimer) clearTimeout(periodRefreshTimer);
-  if (!session) return;
-
-  const now = new Date();
-  const nextMidnight = new Date(
-    now.getFullYear(),
-    now.getMonth(),
-    now.getDate() + 1,
-    0,
-    0,
-    1,
-  );
-  periodRefreshTimer = setTimeout(
-    () => {
-      render();
-    },
-    Math.max(1000, nextMidnight.getTime() - now.getTime()),
-  );
-}
 
 /* ==========================================
     KURBAN Rp1.000 / HARI
@@ -227,6 +205,22 @@ DB.settings.nominal.Kurban = {
   jumlah: 1000,
   frekuensi: "Harian",
 };
+
+/* ==========================================
+    KAS RUTIN SELALU PER BULAN
+========================================== */
+
+DB.settings.nominal.Rutin = Object.assign({}, DB.settings.nominal.Rutin, {
+  frekuensi: "Bulanan",
+});
+
+/* ==========================================
+    NOTIFIKASI LAMA (> 45 HARI) DIBUANG
+========================================== */
+
+DB.notifikasi = DB.notifikasi.filter(
+  (n) => Date.now() - Number(n.createdAt || 0) < 45 * 24 * 60 * 60 * 1000,
+);
 
 function saveDB() {
   localStorage.setItem(DB_KEY, JSON.stringify(DB));
@@ -521,16 +515,521 @@ function saldoPos(pos) {
   return totalMasukPos(pos) - totalKeluarPos(pos);
 }
 
-function totalKasMasuk() {
-  return DB.kasMasuk.reduce((sum, x) => sum + Number(x.jumlah || 0), 0);
+/* ============================================================
+   PERIODE PEMBAYARAN
+   Kas Rutin   -> status berganti setiap BULAN
+   Dana Kurban -> status berganti setiap HARI
+   Status dihitung dari tanggal setoran, jadi begitu bulan/hari
+   berganti semua siswa otomatis kembali "Belum bayar".
+============================================================ */
+
+const FREKUENSI_TETAP = {
+  Rutin: "Bulanan",
+
+  Kurban: "Harian",
+};
+
+const NAMA_BULAN = [
+  "Januari",
+  "Februari",
+  "Maret",
+  "April",
+  "Mei",
+  "Juni",
+  "Juli",
+  "Agustus",
+  "September",
+  "Oktober",
+  "November",
+  "Desember",
+];
+
+const NAMA_HARI = [
+  "Minggu",
+  "Senin",
+  "Selasa",
+  "Rabu",
+  "Kamis",
+  "Jumat",
+  "Sabtu",
+];
+
+function frekuensiPos(pos) {
+  return FREKUENSI_TETAP[pos] || nominalPos(pos).frekuensi;
 }
 
-function totalPengeluaran() {
-  return DB.pengeluaran.reduce((sum, x) => sum + Number(x.jumlah || 0), 0);
+// Periode yang sedang berjalan untuk sebuah pos.
+//   frek : "Harian" | "Mingguan" | "Bulanan"
+//   key  : penanda periode (YYYY-MM-DD / YYYY-Www / YYYY-MM)
+//   label: kata untuk judul ("hari ini", "bulan ini")
+//   nama : nama periode yang mudah dibaca ("Oktober 2026")
+//   frasa: dipakai di kalimat notifikasi ("bulan Oktober 2026")
+function periodeAktif(pos) {
+  const frek = frekuensiPos(pos);
+
+  const hari = todayStr();
+
+  const [tahun, bulan, tgl] = hari.split("-").map(Number);
+
+  if (frek === "Harian") {
+    const namaHari = NAMA_HARI[new Date(tahun, bulan - 1, tgl).getDay()];
+
+    const nama = `${namaHari}, ${tgl} ${NAMA_BULAN[bulan - 1]} ${tahun}`;
+
+    return {
+      frek,
+      key: hari,
+      label: "hari ini",
+      nama,
+      frasa: `hari ${nama}`,
+      info: "berganti otomatis setiap hari",
+    };
+  }
+
+  if (frek === "Mingguan") {
+    const key = weekKey(hari);
+
+    const [thn, minggu] = key.split("-W");
+
+    const nama = `Minggu ke-${Number(minggu)}, ${thn}`;
+
+    return {
+      frek,
+      key,
+      label: "minggu ini",
+      nama,
+      frasa: nama.toLowerCase(),
+      info: "berganti otomatis setiap minggu",
+    };
+  }
+
+  const nama = `${NAMA_BULAN[bulan - 1]} ${tahun}`;
+
+  return {
+    frek: "Bulanan",
+    key: hari.slice(0, 7),
+    label: "bulan ini",
+    nama,
+    frasa: `bulan ${nama}`,
+    info: "berganti otomatis setiap bulan",
+  };
 }
 
-function saldoKas() {
-  return totalKasMasuk() - totalPengeluaran();
+// Sudahkah siswa membayar pada periode tertentu ({ frek, key })?
+function sudahBayarPeriode(pos, siswa, periode) {
+  return DB.kasMasuk.some((x) => {
+    if (normalizedText(x.pos) !== normalizedText(pos)) return false;
+
+    if (normalizedText(x.siswa) !== normalizedText(siswa)) return false;
+
+    const tgl = dateOnlyKey(x.tanggal);
+
+    if (!tgl) return false;
+
+    if (periode.frek === "Harian") return tgl === periode.key;
+
+    if (periode.frek === "Mingguan") return weekKey(tgl) === periode.key;
+
+    return monthKey(tgl) === periode.key;
+  });
+}
+
+/* ============================================================
+   PENGINGAT & NOTIFIKASI
+   Bendahara Utama (Kas Rutin) dan Bendahara Kurban (Dana Kurban)
+   menekan tombol "Ingatkan" -> notifikasi "belum bayar" masuk ke
+   akun siswa yang dituju. Notifikasi disimpan berdasarkan NAMA
+   siswa, jadi tetap sampai walau siswa baru membuat akun atau
+   mengganti username.
+============================================================ */
+
+const POS_PENGINGAT = ["Rutin", "Kurban"];
+
+function bolehMengingatkan(pos) {
+  return (
+    !!session &&
+    session.role === "bendahara" &&
+    POS_PENGINGAT.includes(pos) &&
+    myPos() === pos
+  );
+}
+
+function fmtWaktu(ts, pendek) {
+  const d = new Date(Number(ts));
+
+  if (isNaN(d)) return "-";
+
+  const jam = d.toLocaleTimeString("id-ID", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
+  const tgl = [
+    d.getFullYear(),
+    String(d.getMonth() + 1).padStart(2, "0"),
+    String(d.getDate()).padStart(2, "0"),
+  ].join("-");
+
+  if (tgl === todayStr()) return pendek ? jam : `Hari ini, ${jam}`;
+
+  return `${fmtDate(tgl)}, ${jam}`;
+}
+
+function notifUntukSaya() {
+  if (!session) return [];
+
+  const saya = normalizedText(session.nama);
+
+  return DB.notifikasi
+    .filter((n) => normalizedText(n.untuk) === saya)
+    .sort((a, b) => b.createdAt - a.createdAt);
+}
+
+// Pengingat otomatis dianggap selesai begitu siswa sudah membayar periodenya.
+function notifSudahLunas(n) {
+  return sudahBayarPeriode(n.pos, n.untuk, { frek: n.frek, key: n.periode });
+}
+
+function jumlahNotifBaru() {
+  return notifUntukSaya().filter((n) => !n.dibaca && !notifSudahLunas(n))
+    .length;
+}
+
+// Pengingat yang masih berlaku: periodenya sedang berjalan dan belum dibayar.
+function pengingatAktifSaya() {
+  return notifUntukSaya().filter(
+    (n) =>
+      POS_PENGINGAT.includes(n.pos) &&
+      n.periode === periodeAktif(n.pos).key &&
+      !notifSudahLunas(n),
+  );
+}
+
+// Pengingat periode berjalan yang sudah pernah dikirim ke siswa ini.
+function pengingatTerkirim(pos, nama) {
+  const key = periodeAktif(pos).key;
+
+  const target = normalizedText(nama);
+
+  return DB.notifikasi.find(
+    (n) =>
+      n.pos === pos &&
+      n.periode === key &&
+      normalizedText(n.untuk) === target,
+  );
+}
+
+function simpanPengingat(pos, nama) {
+  const per = periodeAktif(pos);
+
+  // siswa yang sudah membayar periode ini tidak perlu diingatkan
+  if (sudahBayarPeriode(pos, nama, per)) {
+    return null;
+  }
+
+  const meta = posMeta(pos);
+
+  const jumlah = Number(nominalPos(pos).jumlah) || 0;
+
+  const pesan =
+    `Kamu belum membayar ${meta.label} ${per.frasa}` +
+    (jumlah ? ` sebesar ${rupiah(jumlah)}` : "") +
+    `. Yuk segera bayar ke ${session.jabatan}.`;
+
+  const sekarang = Date.now();
+
+  const ada = pengingatTerkirim(pos, nama);
+
+  if (ada) {
+    // Sudah pernah dikirim di periode ini: perbarui saja (tidak menumpuk)
+    // dan tandai belum dibaca lagi supaya siswa melihatnya kembali.
+    Object.assign(ada, {
+      jumlah,
+      pesan,
+      dari: session.nama,
+      jabatan: session.jabatan,
+      createdAt: sekarang,
+      dibaca: false,
+      jumlahKirim: (ada.jumlahKirim || 1) + 1,
+    });
+
+    return ada;
+  }
+
+  const baru = {
+    id: uid(),
+    tipe: "pengingat",
+    untuk: nama,
+    pos,
+    frek: per.frek,
+    periode: per.key,
+    periodeNama: per.nama,
+    jumlah,
+    judul: `Pengingat ${meta.label}`,
+    pesan,
+    dari: session.nama,
+    jabatan: session.jabatan,
+    createdAt: sekarang,
+    dibaca: false,
+    jumlahKirim: 1,
+  };
+
+  DB.notifikasi.push(baru);
+
+  return baru;
+}
+
+function kirimPengingat(nama) {
+  const pos = myPos();
+
+  if (!bolehMengingatkan(pos) || !SISWA_MASTER.includes(nama)) {
+    return;
+  }
+
+  if (!simpanPengingat(pos, nama)) {
+    showToast(`${nama} sudah membayar, pengingat tidak dikirim.`);
+
+    render();
+
+    return;
+  }
+
+  saveDB();
+
+  render();
+
+  showToast(`🔔 Pengingat terkirim ke ${nama}`);
+}
+
+function kirimPengingatSemua() {
+  const pos = myPos();
+
+  if (!bolehMengingatkan(pos)) {
+    return;
+  }
+
+  const per = periodeAktif(pos);
+
+  const meta = posMeta(pos);
+
+  const belum = SISWA_MASTER.filter((n) => !sudahBayarPeriode(pos, n, per));
+
+  if (!belum.length) {
+    showToast("Semua siswa sudah lunas, tidak ada yang perlu diingatkan 🎉");
+
+    return;
+  }
+
+  confirmAction(
+    "Kirim pengingat ke semua?",
+    `${belum.length} siswa yang belum membayar ${meta.label} ${per.frasa} akan menerima notifikasi.`,
+    () => {
+      const sasaran = SISWA_MASTER.filter(
+        (n) => !sudahBayarPeriode(pos, n, periodeAktif(pos)),
+      );
+
+      let terkirim = 0;
+
+      sasaran.forEach((n) => {
+        if (simpanPengingat(pos, n)) terkirim++;
+      });
+
+      saveDB();
+
+      render();
+
+      showToast(`🔔 Pengingat terkirim ke ${terkirim} siswa`);
+    },
+    { yesLabel: "Ya, kirim", yesClass: "btn-teal" },
+  );
+}
+
+// Membuka panel = semua notifikasi dianggap sudah dibaca (badge hilang),
+// tetapi yang baru tetap ditandai selama panel terbuka.
+function bukaNotif() {
+  const milikku = notifUntukSaya();
+
+  ui.notifBaruIds = milikku.filter((n) => !n.dibaca).map((n) => n.id);
+
+  if (ui.notifBaruIds.length) {
+    milikku.forEach((n) => {
+      n.dibaca = true;
+    });
+
+    saveDB();
+  }
+
+  ui.notifOpen = true;
+
+  ui.mobileMenuOpen = false;
+
+  render();
+}
+
+function tutupNotif() {
+  ui.notifOpen = false;
+
+  ui.notifBaruIds = [];
+
+  render();
+}
+
+function renderNotifPanel() {
+  const daftar = notifUntukSaya();
+
+  const baru = new Set(ui.notifBaruIds || []);
+
+  return `
+    <div
+      class="notif-overlay no-print"
+      data-act="closeNotif"
+    ></div>
+
+    <section
+      class="notif-panel no-print"
+      role="dialog"
+      aria-label="Notifikasi"
+    >
+
+      <div class="notif-head">
+
+        <strong>
+          Notifikasi
+        </strong>
+
+        <button
+          class="mobile-menu-close"
+          data-act="closeNotif"
+          title="Tutup"
+          aria-label="Tutup notifikasi"
+        >
+          ✕
+        </button>
+
+      </div>
+
+      <div class="notif-list">
+
+        ${
+          daftar.length
+            ? daftar
+                .map((n) => {
+                  const lunas = notifSudahLunas(n);
+
+                  const isBaru = baru.has(n.id) && !lunas;
+
+                  return `
+                    <div class="notif-item ${isBaru ? "baru" : ""} ${lunas ? "selesai" : ""}">
+
+                      <div class="notif-ic">
+                        ${posMeta(n.pos).icon}
+                      </div>
+
+                      <div class="notif-body">
+
+                        <div class="notif-title">
+                          ${esc(n.judul || "Pengingat")}
+                          ${
+                            lunas
+                              ? `<span class="badge badge-ok">Sudah lunas ✓</span>`
+                              : isBaru
+                                ? `<span class="badge badge-warn">Baru</span>`
+                                : ""
+                          }
+                        </div>
+
+                        <div class="notif-msg">
+                          ${esc(n.pesan)}
+                        </div>
+
+                        <div class="notif-meta">
+                          ${esc(n.jabatan || "Bendahara")} · ${esc(fmtWaktu(n.createdAt))}
+                        </div>
+
+                      </div>
+
+                    </div>
+                  `;
+                })
+                .join("")
+            : `
+              <div class="empty">
+
+                <div class="big">
+                  🔔
+                </div>
+
+                Belum ada notifikasi.
+
+              </div>
+            `
+        }
+
+      </div>
+
+    </section>
+  `;
+}
+
+// Spanduk di dashboard siswa selama pengingat masih berlaku.
+function bannerPengingat() {
+  return pengingatAktifSaya()
+    .map(
+      (n) => `
+        <div class="reminder-banner">
+
+          <div class="reminder-ic">
+            🔔
+          </div>
+
+          <div class="reminder-text">
+
+            <strong>
+              Pengingat dari ${esc(n.jabatan || "Bendahara")}
+            </strong>
+
+            <div>
+              ${esc(n.pesan)}
+            </div>
+
+          </div>
+
+        </div>
+      `,
+    )
+    .join("");
+}
+
+function showToast(text) {
+  let root = document.getElementById("toastRoot");
+
+  if (!root) {
+    root = document.createElement("div");
+
+    root.id = "toastRoot";
+
+    root.className = "no-print";
+
+    root.setAttribute("role", "status");
+
+    root.setAttribute("aria-live", "polite");
+
+    document.body.appendChild(root);
+  }
+
+  const el = document.createElement("div");
+
+  el.className = "toast";
+
+  el.textContent = text;
+
+  root.appendChild(el);
+
+  setTimeout(() => {
+    el.classList.add("out");
+
+    setTimeout(() => el.remove(), 320);
+  }, 2800);
 }
 
 /* ============================================================
@@ -560,6 +1059,10 @@ let ui = {
 
   mobileMenuOpen: false,
 
+  notifOpen: false,
+
+  notifBaruIds: [],
+
   msg: null,
 
   confirmDialog: null,
@@ -579,8 +1082,6 @@ function render() {
   if (ui.confirmDialog) {
     renderConfirmDialog();
   }
-
-  schedulePeriodRefresh();
 }
 
 /* ============================================================
@@ -1070,11 +1571,6 @@ const NAV = [
     ic: "🎯",
     label: "Target",
   },
-  {
-    id: "notifikasi",
-    ic: "🔔",
-    label: "Notifikasi",
-  },
 
   {
     id: "kalender",
@@ -1109,6 +1605,8 @@ const NAV = [
 function renderShell() {
   const roleLabel =
     session.role === "bendahara" ? session.jabatan : "Siswa TKJT 1";
+
+  const notifBaru = jumlahNotifBaru();
 
   return `
 
@@ -1254,14 +1752,17 @@ function renderShell() {
         </div>
 
         <button
-          class="icon-btn notification-btn"
-          data-act="nav"
-          data-view="notifikasi"
-          title="Buka notifikasi"
-          aria-label="Buka notifikasi"
+          class="icon-btn notif-btn"
+          data-act="toggleNotif"
+          title="Notifikasi"
+          aria-label="Notifikasi"
         >
           🔔
-          ${notificationUnreadCount() ? `<span class="notification-count">${notificationUnreadCount() > 99 ? "99+" : notificationUnreadCount()}</span>` : ""}
+          ${
+            notifBaru
+              ? `<span class="notif-badge">${notifBaru > 9 ? "9+" : notifBaru}</span>`
+              : ""
+          }
         </button>
 
         <button
@@ -1283,6 +1784,8 @@ function renderShell() {
       </div>
 
     </div>
+
+    ${ui.notifOpen ? renderNotifPanel() : ""}
 
     <!-- ==================================
          MAIN LAYOUT
@@ -1360,9 +1863,6 @@ function renderPage() {
     case "target":
       return pageTarget();
 
-    case "notifikasi":
-      return pageNotifikasi();
-
     case "kalender":
       return session.role === "bendahara" ? pageKalender() : pageDashboard();
 
@@ -1433,7 +1933,9 @@ function dashboardUtama() {
 
     </div>
 
-    <div class="grid stat stat-three">
+    <div
+      class="grid stat stat-3"
+    >
 
       <div
         class="
@@ -1654,6 +2156,8 @@ function dashboardSiswa() {
 
     </div>
 
+    ${bannerPengingat()}
+
     <div class="grid stat">
 
       <div
@@ -1805,320 +2309,171 @@ function dashboardSiswa() {
    STATUS PEMBAYARAN
 ============================================================ */
 
-function paymentPeriodForFrequency(frequency) {
-  if (frequency === "Harian") return todayStr();
-  if (frequency === "Mingguan") return weekKey(todayStr());
-  return todayStr().slice(0, 7);
-}
-
-function paymentPeriodDisplay(frequency, period) {
-  if (frequency === "Harian") return fmtDate(period);
-  if (frequency === "Mingguan") return `minggu ${period}`;
-
-  const parts = String(period).split("-");
-  if (parts.length !== 2) return period;
-  const monthDate = new Date(Number(parts[0]), Number(parts[1]) - 1, 1);
-  return monthDate.toLocaleDateString("id-ID", {
-    month: "long",
-    year: "numeric",
-  });
-}
-
-function paymentPeriodDescription(frequency, period) {
-  if (frequency === "Harian")
-    return `tanggal ${paymentPeriodDisplay(frequency, period)}`;
-  if (frequency === "Mingguan") return paymentPeriodDisplay(frequency, period);
-  return `bulan ${paymentPeriodDisplay(frequency, period)}`;
-}
-
-function paymentMatchesPeriod(payment, pos, studentName, frequency, period) {
-  if (!payment) return false;
-  if (normalizedText(payment.pos) !== normalizedText(pos)) return false;
-  if (normalizedText(payment.siswa) !== normalizedText(studentName))
-    return false;
-
-  const paidDate = dateOnlyKey(payment.tanggal);
-  if (!paidDate) return false;
-
-  if (frequency === "Harian") return paidDate === period;
-  if (frequency === "Mingguan") return weekKey(paidDate) === period;
-  return monthKey(paidDate) === period;
-}
-
-function reminderAlreadySent(pos, studentName, period) {
-  return (DB.notifications || []).some(
-    (notification) =>
-      notification.type === "payment-reminder" &&
-      normalizedText(notification.pos) === normalizedText(pos) &&
-      notification.period === period &&
-      normalizedText(notification.recipientName) ===
-        normalizedText(studentName),
-  );
-}
-
-function notificationsForSession() {
-  if (!session) return [];
-  const notifications = Array.isArray(DB.notifications) ? DB.notifications : [];
-
-  if (session.role === "siswa") {
-    return notifications.filter(
-      (notification) =>
-        notification.recipientId === session.id ||
-        normalizedText(notification.recipientName) ===
-          normalizedText(session.nama),
-    );
-  }
-
-  // Bendahara hanya melihat daftar pengingat yang dibuatnya.
-  return notifications.filter(
-    (notification) => notification.senderId === session.id,
-  );
-}
-
-function notificationUnreadCount() {
-  if (!session || session.role !== "siswa") return 0;
-  return notificationsForSession().filter(
-    (notification) => !notification.readAt,
-  ).length;
-}
-
-function pageNotifikasi() {
-  const notifications = notificationsForSession()
-    .slice()
-    .sort((a, b) => Number(b.createdAt || 0) - Number(a.createdAt || 0));
-  const isStudent = session.role === "siswa";
-  const unread = notifications.filter(
-    (notification) => !notification.readAt,
-  ).length;
-
-  return `
-    <div class="page-head">
-      <h1>Notifikasi</h1>
-      <p>${isStudent ? "Pengingat pembayaran dan informasi untuk akunmu." : "Riwayat pengingat pembayaran yang sudah kamu kirim."}</p>
-    </div>
-
-    ${
-      isStudent && unread
-        ? `
-      <div class="form-actions notification-page-actions">
-        <span class="muted">${unread} notifikasi belum dibaca</span>
-        <button class="btn btn-outline btn-sm" data-act="markAllNotificationsRead">Tandai semua dibaca</button>
-      </div>
-    `
-        : ""
-    }
-
-    <div class="notification-list">
-      ${
-        notifications.length
-          ? notifications
-              .map(
-                (notification) => `
-        <article class="card notification-card ${isStudent && !notification.readAt ? "notification-unread" : ""}">
-          <div class="notification-card-head">
-            <strong>${esc(notification.title || "Pengingat pembayaran")}</strong>
-            <span class="badge ${isStudent && !notification.readAt ? "badge-warn" : "badge-info"}">${isStudent ? (notification.readAt ? "Sudah dibaca" : "Belum dibaca") : "Terkirim"}</span>
-          </div>
-          <p>${esc(notification.message || "Ada pengingat pembayaran untukmu.")}</p>
-          <div class="notification-meta">
-            <span>${esc(notification.pos || "Kas")}</span>
-            <span>${esc(new Date(Number(notification.createdAt || Date.now())).toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" }))}</span>
-            ${!isStudent ? `<span>Untuk: ${esc(notification.recipientName || "Siswa")}</span>` : `<span>Dari: ${esc(notification.senderName || "Bendahara")}</span>`}
-          </div>
-          ${isStudent && !notification.readAt ? `<button class="btn btn-outline btn-sm" data-act="markNotificationRead" data-id="${esc(notification.id)}">Tandai dibaca</button>` : ""}
-        </article>
-      `,
-              )
-              .join("")
-          : `
-        <div class="table-wrap"><div class="empty"><div class="big">🔔</div>${isStudent ? "Belum ada notifikasi untuk akun ini." : "Kamu belum mengirim pengingat pembayaran."}</div></div>
-      `
-      }
-    </div>
-  `;
-}
-
 function statusPembayaranBlock(pos) {
   const meta = posMeta(pos);
-  const nom = nominalPos(pos);
 
-  if (nom.frekuensi === "Sesuai kebutuhan") {
+  if (frekuensiPos(pos) === "Sesuai kebutuhan") {
     return `
-      <div class="section-title"><h2>Kontribusi ${meta.label}</h2></div>
-      <div class="table-wrap"><div class="empty"><div class="big">🎉</div>Dana acara dikumpulkan sesuai kebutuhan.</div></div>
+      <div class="section-title">
+
+        <h2>
+          Kontribusi
+          ${meta.label}
+        </h2>
+
+      </div>
+
+      <div class="table-wrap">
+
+        <div class="empty">
+
+          <div class="big">
+            🎉
+          </div>
+
+          Dana acara dikumpulkan
+          sesuai kebutuhan.
+
+        </div>
+
+      </div>
     `;
   }
 
-  const frequency = nom.frekuensi;
-  const period = paymentPeriodForFrequency(frequency);
-  const periodDisplay = paymentPeriodDisplay(frequency, period);
-  const titlePeriod =
-    frequency === "Harian"
-      ? `hari ini · ${periodDisplay}`
-      : frequency === "Mingguan"
-        ? `${periodDisplay}`
-        : periodDisplay;
+  // Periode berjalan: Kas Rutin = bulan ini, Dana Kurban = hari ini.
+  // Begitu bulan/hari berganti, semua siswa otomatis kembali "Belum bayar".
+  const per = periodeAktif(pos);
 
-  const lunas = SISWA_MASTER.filter((name) =>
-    DB.kasMasuk.some((payment) =>
-      paymentMatchesPeriod(payment, pos, name, frequency, period),
-    ),
+  const lunas = new Set(
+    SISWA_MASTER.filter((name) => sudahBayarPeriode(pos, name, per)),
   );
-  const unpaid = SISWA_MASTER.filter((name) => !lunas.includes(name));
-  const canRemind =
-    session.role === "bendahara" &&
-    myPos() === pos &&
-    ["Rutin", "Kurban"].includes(pos);
 
-  return `
-    <div class="section-title">
-      <h2>Status pembayaran ${meta.label} · ${titlePeriod}</h2>
-      <div class="reminder-toolbar">
-        <span class="muted">${lunas.length}/${SISWA_MASTER.length} lunas</span>
+  const belumBayar = SISWA_MASTER.length - lunas.size;
+
+  const bisaIngatkan = bolehMengingatkan(pos);
+
+  const barisSiswa = SISWA_MASTER.map((name) => {
+    const sudah = lunas.has(name);
+
+    const terkirim =
+      bisaIngatkan && !sudah ? pengingatTerkirim(pos, name) : null;
+
+    return `
+      <tr>
+
+        <td data-label="Nama">
+          ${esc(name)}
+        </td>
+
+        <td data-label="Status">
+          ${
+            sudah
+              ? `<span class="badge badge-ok">Lunas</span>`
+              : `<span class="badge badge-warn">Belum bayar</span>`
+          }
+        </td>
+
         ${
-          canRemind && unpaid.length
+          bisaIngatkan
             ? `
-          <button class="btn btn-primary btn-sm" data-act="sendAllReminders" data-pos="${esc(pos)}" data-frequency="${esc(frequency)}" data-period="${esc(period)}">
-            🔔 Ingatkan semua (${unpaid.length})
-          </button>
-        `
+              <td data-label="Pengingat" class="no-print">
+                ${
+                  sudah
+                    ? `<span class="muted">-</span>`
+                    : `
+                      <div class="remind-cell">
+
+                        <button
+                          class="btn btn-soft btn-sm"
+                          data-act="kirimPengingat"
+                          data-nama="${esc(name)}"
+                        >
+                          ${terkirim ? "🔔 Ingatkan lagi" : "🔔 Ingatkan"}
+                        </button>
+
+                        ${
+                          terkirim
+                            ? `<span class="remind-sent">✓ Terkirim ${esc(fmtWaktu(terkirim.createdAt, true))}</span>`
+                            : ""
+                        }
+
+                      </div>
+                    `
+                }
+              </td>
+            `
             : ""
         }
+
+      </tr>
+    `;
+  }).join("");
+
+  return `
+    <div class="section-title status-head">
+
+      <div>
+
+        <h2>
+          Status pembayaran
+          ${meta.label} -
+          ${per.label}
+        </h2>
+
+        <div class="period-note">
+          📅 ${esc(per.nama)} · ${per.info}
+        </div>
+
       </div>
+
+      <div class="status-actions">
+
+        <span class="muted">
+          ${lunas.size}/${SISWA_MASTER.length} lunas
+        </span>
+
+        ${
+          bisaIngatkan
+            ? `
+              <button
+                class="btn btn-soft btn-sm no-print"
+                data-act="kirimPengingatSemua"
+                ${belumBayar ? "" : "disabled"}
+              >
+                🔔 Ingatkan semua (${belumBayar})
+              </button>
+            `
+            : ""
+        }
+
+      </div>
+
     </div>
 
-    <div class="table-wrap">
-      <table>
-        <thead><tr><th>Nama</th><th>Status</th>${canRemind ? "<th>Pengingat</th>" : ""}</tr></thead>
+    <div class="table-wrap status-wrap">
+
+      <table class="status-table ${bisaIngatkan ? "has-aksi" : ""}">
+
+        <thead>
+
+          <tr>
+            <th>Nama</th>
+            <th>Status</th>
+            ${bisaIngatkan ? `<th class="no-print">Pengingat</th>` : ""}
+          </tr>
+
+        </thead>
+
         <tbody>
-          ${SISWA_MASTER.map((name) => {
-            const isPaid = lunas.includes(name);
-            const sent = reminderAlreadySent(pos, name, period);
-            return `
-              <tr>
-                <td data-label="Nama">${esc(name)}</td>
-                <td data-label="Status">
-                  ${
-                    isPaid
-                      ? `<span class="badge badge-ok">Lunas</span>`
-                      : `<span class="badge badge-warn">Belum bayar</span>`
-                  }
-                </td>
-                ${
-                  canRemind
-                    ? `<td data-label="Pengingat">
-                  ${
-                    isPaid
-                      ? `<span class="muted">—</span>`
-                      : sent
-                        ? `<span class="badge badge-info">Terkirim</span>`
-                        : `<button class="btn btn-outline btn-sm" data-act="sendReminder" data-name="${esc(name)}" data-pos="${esc(pos)}" data-frequency="${esc(frequency)}" data-period="${esc(period)}">Kirim pengingat</button>`
-                  }
-                </td>`
-                    : ""
-                }
-              </tr>
-            `;
-          }).join("")}
+
+          ${barisSiswa}
+
         </tbody>
+
       </table>
+
     </div>
   `;
-}
-
-function createPaymentReminder(studentName, pos, frequency, period) {
-  if (!session || session.role !== "bendahara" || myPos() !== pos) return false;
-  if (!["Rutin", "Kurban"].includes(pos)) return false;
-
-  const currentFrequency = nominalPos(pos).frekuensi;
-  const currentPeriod = paymentPeriodForFrequency(currentFrequency);
-  if (frequency !== currentFrequency || period !== currentPeriod) {
-    alert(
-      "Periode pembayaran sudah berubah. Tampilan akan diperbarui, lalu coba lagi.",
-    );
-    render();
-    return false;
-  }
-
-  if (
-    DB.kasMasuk.some((payment) =>
-      paymentMatchesPeriod(payment, pos, studentName, frequency, period),
-    )
-  ) {
-    alert(`${studentName} sudah tercatat lunas untuk periode ini.`);
-    return false;
-  }
-
-  if (reminderAlreadySent(pos, studentName, period)) {
-    alert(`Pengingat untuk ${studentName} sudah dikirim pada periode ini.`);
-    return false;
-  }
-
-  const studentAccount = DB.accounts.find(
-    (account) =>
-      account.role === "siswa" &&
-      normalizedText(account.nama) === normalizedText(studentName),
-  );
-  const nom = nominalPos(pos);
-  const description = paymentPeriodDescription(frequency, period);
-  const title = `Pengingat pembayaran ${pos === "Rutin" ? "Kas Rutin" : "Dana Kurban"}`;
-  const message = `Halo ${studentName}, pembayaran ${pos === "Rutin" ? "Kas Rutin" : "Dana Kurban"} untuk ${description} sebesar ${rupiah(nom.jumlah)} belum tercatat. Silakan lakukan pembayaran atau hubungi bendahara jika sudah membayar.`;
-
-  if (!Array.isArray(DB.notifications)) DB.notifications = [];
-  DB.notifications.push({
-    id: uid(),
-    type: "payment-reminder",
-    recipientId: studentAccount ? studentAccount.id : null,
-    recipientName: studentName,
-    pos,
-    frequency,
-    period,
-    title,
-    message,
-    senderId: session.id,
-    senderName: session.nama,
-    createdAt: Date.now(),
-    readAt: null,
-  });
-  saveDB();
-  return true;
-}
-
-function sendPaymentReminder(studentName, pos, frequency, period) {
-  if (!createPaymentReminder(studentName, pos, frequency, period)) return;
-  render();
-}
-
-function sendAllPaymentReminders(pos, frequency, period) {
-  if (!session || session.role !== "bendahara" || myPos() !== pos) return;
-  if (
-    frequency !== nominalPos(pos).frekuensi ||
-    period !== paymentPeriodForFrequency(frequency)
-  ) {
-    alert(
-      "Periode pembayaran sudah berubah. Tampilan akan diperbarui, lalu coba lagi.",
-    );
-    render();
-    return;
-  }
-
-  const unpaid = SISWA_MASTER.filter(
-    (name) =>
-      !DB.kasMasuk.some((payment) =>
-        paymentMatchesPeriod(payment, pos, name, frequency, period),
-      ) && !reminderAlreadySent(pos, name, period),
-  );
-  let sent = 0;
-  unpaid.forEach((name) => {
-    if (createPaymentReminder(name, pos, frequency, period)) sent++;
-  });
-  saveDB();
-  alert(
-    sent
-      ? `Pengingat berhasil dibuat untuk ${sent} siswa yang belum membayar.`
-      : "Tidak ada pengingat baru. Semua siswa sudah lunas atau sudah diingatkan untuk periode ini.",
-  );
-  render();
 }
 
 /* ============================================================
@@ -2276,6 +2631,187 @@ function pageKasMasuk() {
                   cols-3
                 "
               >
+
+                <div class="field">
+
+                  <label>
+                    Siswa
+                  </label>
+
+                  <select
+                    name="siswa"
+                    required
+                  >
+
+                    <option value="">
+                      Pilih siswa...
+                    </option>
+
+                    ${SISWA_MASTER.map(
+                      (name) => `
+                        <option
+                          value="${esc(name)}"
+                          ${editing && editing.siswa === name ? "selected" : ""}
+                        >
+                          ${esc(name)}
+                        </option>
+                      `,
+                    ).join("")}
+
+                  </select>
+
+                </div>
+
+                <div class="field">
+
+                  <label>
+                    Tanggal
+                  </label>
+
+                  <input
+                    type="date"
+                    name="tanggal"
+                    value="${editing ? editing.tanggal : todayStr()}"
+                    required
+                  >
+
+                </div>
+
+                <div class="field">
+
+                  <label>
+                    Jumlah
+                  </label>
+
+                  <input
+                    type="number"
+                    min="0"
+                    name="jumlah"
+                    value="${editing ? editing.jumlah : nom.jumlah || ""}"
+                    required
+                  >
+
+                </div>
+
+              </div>
+
+              <div
+                class="
+                  form-row
+                  cols-2
+                "
+              >
+
+                <div class="field">
+
+                  <label>
+                    Metode
+                  </label>
+
+                  <select
+                    name="metode"
+                  >
+
+                    <option value="Tunai">
+                      Tunai
+                    </option>
+
+                    <option value="QRIS">
+                      QRIS
+                    </option>
+
+                  </select>
+
+                </div>
+
+                <div class="field">
+
+                  <label>
+                    Keterangan
+                  </label>
+
+                  <input
+                    name="keterangan"
+                    placeholder="Keterangan"
+                    value="${editing ? esc(editing.keterangan || "") : ""}"
+                  >
+
+                </div>
+
+              </div>
+
+              <div class="form-actions">
+
+                <button
+                  class="
+                    btn
+                    btn-primary
+                  "
+                  type="submit"
+                >
+                  ${editing ? "Simpan perubahan" : "Simpan"}
+                </button>
+
+                ${
+                  editing
+                    ? `
+                      <button
+                        type="button"
+                        class="
+                          btn
+                          btn-outline
+                        "
+                        data-act="cancelEditKas"
+                      >
+                        Batal
+                      </button>
+                    `
+                    : ""
+                }
+
+              </div>
+
+            </form>
+
+          </div>
+        `
+        : ""
+    }
+
+    ${
+      session.role === "siswa"
+        ? `
+          <div class="form-card">
+
+            <h3>
+              📤 Upload bukti transfer
+            </h3>
+
+            <form
+              data-form="bukti"
+            >
+
+              <div
+                class="
+                  form-row
+                  cols-3
+                "
+              >
+
+                <div class="field">
+
+                  <label>
+                    Tanggal
+                  </label>
+
+                  <input
+                    type="date"
+                    name="tanggal"
+                    value="${todayStr()}"
+                    required
+                  >
+
+                </div>
 
                 <div class="field">
 
@@ -3145,7 +3681,8 @@ function pageTarget() {
                         type="button"
                         class="
                           btn
-                          btn-outline
+                
+                             btn-outline
                         "
                         data-act="cancelEditTarget"
                       >
@@ -4030,9 +4567,7 @@ function pagePengaturan() {
             <div class="field">
 
               <label>
-                Username saat ini
-              </label>
-
+ 
               <input
                 value="${esc(currentUsername)}"
                 disabled
@@ -4350,6 +4885,10 @@ function onAction(e) {
   if (act === "toggleMobileMenu") {
     ui.mobileMenuOpen = !ui.mobileMenuOpen;
 
+    ui.notifOpen = false;
+
+    ui.notifBaruIds = [];
+
     render();
 
     return;
@@ -4417,6 +4956,10 @@ function onAction(e) {
 
     ui.mobileMenuOpen = false;
 
+    ui.notifOpen = false;
+
+    ui.notifBaruIds = [];
+
     render();
 
     return;
@@ -4436,53 +4979,6 @@ function onAction(e) {
     return;
   }
 
-  if (act === "sendReminder") {
-    sendPaymentReminder(
-      el.dataset.name,
-      el.dataset.pos,
-      el.dataset.frequency,
-      el.dataset.period,
-    );
-    return;
-  }
-
-  if (act === "sendAllReminders") {
-    sendAllPaymentReminders(
-      el.dataset.pos,
-      el.dataset.frequency,
-      el.dataset.period,
-    );
-    return;
-  }
-
-  if (act === "markNotificationRead") {
-    if (session.role !== "siswa") return;
-    const notification = (DB.notifications || []).find(
-      (item) => item.id === id,
-    );
-    if (
-      notification &&
-      (notification.recipientId === session.id ||
-        normalizedText(notification.recipientName) ===
-          normalizedText(session.nama))
-    ) {
-      notification.readAt = Date.now();
-      saveDB();
-      render();
-    }
-    return;
-  }
-
-  if (act === "markAllNotificationsRead") {
-    if (session.role !== "siswa") return;
-    notificationsForSession().forEach((notification) => {
-      if (!notification.readAt) notification.readAt = Date.now();
-    });
-    saveDB();
-    render();
-    return;
-  }
-
   if (act === "toggleTheme") {
     toggleTheme();
 
@@ -4491,6 +4987,36 @@ function onAction(e) {
 
   if (act === "logout") {
     doLogout();
+
+    return;
+  }
+
+  /* NOTIFIKASI & PENGINGAT */
+
+  if (act === "toggleNotif") {
+    if (ui.notifOpen) {
+      tutupNotif();
+    } else {
+      bukaNotif();
+    }
+
+    return;
+  }
+
+  if (act === "closeNotif") {
+    tutupNotif();
+
+    return;
+  }
+
+  if (act === "kirimPengingat") {
+    kirimPengingat(el.dataset.nama);
+
+    return;
+  }
+
+  if (act === "kirimPengingatSemua") {
+    kirimPengingatSemua();
 
     return;
   }
@@ -4873,6 +5399,10 @@ function doLogin(role, username, password) {
 
   ui.mobileMenuOpen = false;
 
+  ui.notifOpen = false;
+
+  ui.notifBaruIds = [];
+
   ui.msg = null;
 
   render();
@@ -4888,6 +5418,10 @@ function doLogout() {
   ui.pos = "Rutin";
 
   ui.mobileMenuOpen = false;
+
+  ui.notifOpen = false;
+
+  ui.notifBaruIds = [];
 
   render();
 }
@@ -5432,13 +5966,17 @@ function doSaveBukti(val, file) {
    DIALOG
 ============================================================ */
 
-function confirmAction(title, text, callback) {
+function confirmAction(title, text, callback, opts) {
   ui.confirmDialog = {
     title,
 
     text,
 
     onYes: callback,
+
+    yesLabel: (opts && opts.yesLabel) || "Ya, lanjutkan",
+
+    yesClass: (opts && opts.yesClass) || "btn-danger",
   };
 
   renderConfirmDialog();
@@ -5479,13 +6017,10 @@ function renderConfirmDialog() {
         >
 
           <button
-            class="
-              btn
-              btn-danger
-            "
+            class="btn ${esc(ui.confirmDialog.yesClass || "btn-danger")}"
             data-act="confirmYes"
           >
-            Ya, lanjutkan
+            ${esc(ui.confirmDialog.yesLabel || "Ya, lanjutkan")}
           </button>
 
           <button
@@ -5537,3 +6072,59 @@ if (session) {
 }
 
 render();
+
+/* ============================================================
+   PERGANTIAN PERIODE OTOMATIS
+   Dashboard digambar ulang begitu tanggal berganti (tengah malam /
+   awal bulan) supaya status Kas Rutin (bulanan) dan Dana Kurban
+   (harian) langsung kembali ke "Belum bayar" tanpa refresh manual.
+============================================================ */
+
+let stempelTanggal = todayStr();
+
+function cekPergantianPeriode() {
+  const sekarang = todayStr();
+
+  if (sekarang === stempelTanggal) {
+    return;
+  }
+
+  const kemarin = stempelTanggal;
+
+  stempelTanggal = sekarang;
+
+  if (!session) {
+    return;
+  }
+
+  // Hanya dashboard yang digambar ulang: halaman itu tidak punya isian form.
+  // Halaman lain dibiarkan agar ketikan yang belum disimpan tidak hilang;
+  // periode barunya otomatis terpakai begitu pindah halaman.
+  if (ui.view === "dashboard" && !ui.confirmDialog) {
+    render();
+  }
+
+  const pos = myPos();
+
+  if (pos && POS_PENGINGAT.includes(pos)) {
+    const berganti =
+      frekuensiPos(pos) === "Harian" ||
+      kemarin.slice(0, 7) !== sekarang.slice(0, 7);
+
+    if (berganti) {
+      showToast(
+        `📅 Periode baru: ${periodeAktif(pos).nama}. Status pembayaran direset.`,
+      );
+    }
+  }
+}
+
+setInterval(cekPergantianPeriode, 30 * 1000);
+
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden) {
+    cekPergantianPeriode();
+  }
+});
+
+window.addEventListener("focus", cekPergantianPeriode);
