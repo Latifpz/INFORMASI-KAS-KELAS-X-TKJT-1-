@@ -1479,7 +1479,7 @@ MOBILE HAMBURGER
   display: block;
 }
 
-.mobile--menu-head {
+.mobile-menu-head {
   display: flex;
 
   align-items: center;
