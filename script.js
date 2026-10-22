@@ -67,23 +67,93 @@ const KATEGORI_PENGELUARAN = [
   "Lainnya",
 ];
 
+/* ============================================================
+   IKON
+   Ikon garis (SVG) yang digambar sendiri, tanpa pustaka luar.
+   Warnanya mengikuti warna teks (currentColor), jadi ikut
+   berubah di tema gelap/terang dan tampil sama di semua HP
+   (emoji tampil berbeda di tiap perangkat).
+   Pakai: icon("lonceng")  atau  icon("centang", "ico-sm")
+============================================================ */
+
+const ICONS = {
+  dashboard:
+    '<rect x="3.5" y="3.5" width="7" height="7" rx="1.8"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.8"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.8"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.8"/>',
+  masuk:
+    '<path d="M12 4v10m0 0 4-4m-4 4-4-4"/><path d="M4.5 15v2.5A2.5 2.5 0 0 0 7 20h10a2.5 2.5 0 0 0 2.5-2.5V15"/>',
+  keluar:
+    '<path d="M12 14V4m0 0 4 4m-4-4-4 4"/><path d="M4.5 15v2.5A2.5 2.5 0 0 0 7 20h10a2.5 2.5 0 0 0 2.5-2.5V15"/>',
+  target:
+    '<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1" fill="currentColor"/>',
+  kalender:
+    '<rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',
+  qris: '<rect x="3.5" y="3.5" width="6.5" height="6.5" rx="1.3"/><rect x="14" y="3.5" width="6.5" height="6.5" rx="1.3"/><rect x="3.5" y="14" width="6.5" height="6.5" rx="1.3"/><path d="M14 14h2.5v2.5H14zM20.5 14v3M17.5 20.5h3M14 20.5v.01"/>',
+  pengaturan:
+    '<path d="M4 7h9M19 7h1M4 17h1M11 17h9"/><circle cx="16" cy="7" r="2.3"/><circle cx="8" cy="17" r="2.3"/>',
+  akun: '<circle cx="9" cy="8.5" r="3.2"/><path d="M3 20c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5"/><circle cx="17.2" cy="9.5" r="2.4"/><path d="M17.5 14.6c2.4.2 4 1.9 4 4.4"/>',
+  lonceng:
+    '<path d="M6 9.5a6 6 0 0 1 12 0c0 6.5 2.5 8 2.5 8h-17s2.5-1.5 2.5-8"/><path d="M10 20.5a2.2 2.2 0 0 0 4 0"/>',
+  matahari:
+    '<circle cx="12" cy="12" r="4"/><path d="M12 2.8v2M12 19.2v2M4.5 4.5l1.4 1.4M18.1 18.1l1.4 1.4M2.8 12h2M19.2 12h2M4.5 19.5l1.4-1.4M18.1 5.9l1.4-1.4"/>',
+  bulan: '<path d="M20 14.6A8.4 8.4 0 0 1 9.4 4a8.4 8.4 0 1 0 10.6 10.6z"/>',
+  "keluar-akun":
+    '<path d="M10 4H6.5A2.5 2.5 0 0 0 4 6.5v11A2.5 2.5 0 0 0 6.5 20H10"/><path d="m15.5 8 4 4-4 4M19.5 12H9.5"/>',
+  menu: '<path d="M4 7h16M4 12h16M4 17h16"/>',
+  tutup: '<path d="M6 6l12 12M18 6 6 18"/>',
+  centang: '<path d="m5 12.5 4.5 4.5L19 7.5"/>',
+  jam: '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',
+  tambah: '<path d="M12 5v14M5 12h14"/>',
+  pensil:
+    '<path d="M4.5 19.5 5.3 16 16.2 5.1a2.1 2.1 0 0 1 3 3L8.3 19z"/><path d="m14.5 6.8 2.7 2.7"/>',
+  sampah:
+    '<path d="M4.5 7h15M9.5 7V4.5h5V7"/><path d="m6.5 7 .9 12.5h9.2L17.5 7M10 11v5M14 11v5"/>',
+  unggah:
+    '<path d="M12 15.5V4m0 0 4 4m-4-4-4 4"/><path d="M4.5 15v2.5A2.5 2.5 0 0 0 7 20h10a2.5 2.5 0 0 0 2.5-2.5V15"/>',
+  gambar:
+    '<rect x="3.5" y="5" width="17" height="14" rx="2.5"/><circle cx="9" cy="10" r="1.7"/><path d="m4 17 5-4.5 3.5 3L15 13.5 20 18"/>',
+  info: '<circle cx="12" cy="12" r="8.5"/><path d="M12 11v5.5M12 7.8v.01"/>',
+  dompet:
+    '<path d="M16.5 8V6.5A2 2 0 0 0 14.5 4.5H6A2.5 2.5 0 0 0 3.5 7v10A2.5 2.5 0 0 0 6 19.5h12a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2H6.5"/><circle cx="16" cy="13.5" r="1.1" fill="currentColor"/>',
+  bendera: '<path d="M5 21V4"/><path d="M5 5h12.5l-2.8 3.8 2.8 3.7H5"/>',
+  "bulan-bintang":
+    '<path d="M16.5 14.3A7 7 0 0 1 9.7 5.5a7 7 0 1 0 6.8 8.8z"/><path d="m17.5 3.5.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7z"/>',
+  kirim: '<path d="M20 4 10.5 13.5M20 4l-6 16-3.5-6.5L4 10z"/>',
+  tanda: '<path d="M12 4.5 21 19.5H3z"/><path d="M12 10v4.5M12 17v.01"/>',
+  siswa:
+    '<circle cx="12" cy="8" r="3.6"/><path d="M4.5 20c0-3.9 3.4-6.2 7.5-6.2s7.5 2.3 7.5 6.2"/>',
+  kunci:
+    '<rect x="4.5" y="10.5" width="15" height="10" rx="2.5"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5"/>',
+  pesan:
+    '<path d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v8a2.5 2.5 0 0 1-2.5 2.5H11l-4.5 3.5V17A2.5 2.5 0 0 1 4 14.5z"/>',
+};
+
+function icon(name, kelas) {
+  return (
+    '<svg class="ico' +
+    (kelas ? " " + kelas : "") +
+    '" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">' +
+    (ICONS[name] || "") +
+    "</svg>"
+  );
+}
+
 const POS = [
   {
     key: "Rutin",
     label: "Kas Rutin",
-    icon: "💰",
+    icon: icon("dompet"),
     jabatan: "Bendahara Utama",
   },
   {
     key: "Acara",
     label: "Dana Acara",
-    icon: "🎉",
+    icon: icon("bendera"),
     jabatan: "Bendahara Acara",
   },
   {
     key: "Kurban",
     label: "Dana Kurban",
-    icon: "🐐",
+    icon: icon("bulan-bintang"),
     jabatan: "Bendahara Kurban",
   },
 ];
@@ -265,6 +335,13 @@ function applyTheme() {
   document.documentElement.setAttribute("data-theme", theme);
 
   localStorage.setItem(THEME_KEY, theme);
+
+  // warna bilah peramban di HP mengikuti tema
+  const warna = document.querySelector('meta[name="theme-color"]');
+
+  if (warna) {
+    warna.setAttribute("content", theme === "dark" ? "#0d1716" : "#f2f5f1");
+  }
 }
 
 function toggleTheme() {
@@ -484,6 +561,35 @@ function esc(text) {
         "'": "&#39;",
       })[char],
   );
+}
+
+// Nama siswa disimpan KAPITAL (sesuai data kelas). Tampilannya dibuat
+// huruf besar-kecil supaya mudah dibaca; nilai/data aslinya tidak berubah.
+function titleCase(text) {
+  return String(text == null ? "" : text)
+    .toLowerCase()
+    .replace(
+      /(^|[\s\-.'])([a-z\u00e0-\u024f])/g,
+      (m, sep, ch) => sep + ch.toUpperCase(),
+    );
+}
+
+function tampilNama(nama) {
+  return esc(titleCase(nama));
+}
+
+// Angka besar: "Rp" kecil, angkanya dominan.
+function rupiahFig(number) {
+  number = Number(number) || 0;
+
+  return `<span class="cur">Rp</span> ${esc(number.toLocaleString("id-ID"))}`;
+}
+
+// Status selalu ikon + kata, tidak hanya warna.
+function badgeStatus(sudah) {
+  return sudah
+    ? `<span class="badge badge-ok">${icon("centang")}Lunas</span>`
+    : `<span class="badge badge-warn">${icon("jam")}Belum bayar</span>`;
 }
 
 function nominalPos(pos) {
@@ -713,9 +819,7 @@ function pengingatTerkirim(pos, nama) {
 
   return DB.notifikasi.find(
     (n) =>
-      n.pos === pos &&
-      n.periode === key &&
-      normalizedText(n.untuk) === target,
+      n.pos === pos && n.periode === key && normalizedText(n.untuk) === target,
   );
 }
 
@@ -787,7 +891,7 @@ function kirimPengingat(nama) {
   }
 
   if (!simpanPengingat(pos, nama)) {
-    showToast(`${nama} sudah membayar, pengingat tidak dikirim.`);
+    showToast(`${titleCase(nama)} sudah membayar, pengingat tidak dikirim.`);
 
     render();
 
@@ -798,7 +902,7 @@ function kirimPengingat(nama) {
 
   render();
 
-  showToast(`🔔 Pengingat terkirim ke ${nama}`);
+  showToast(`Pengingat terkirim ke ${titleCase(nama)}`);
 }
 
 function kirimPengingatSemua() {
@@ -815,7 +919,7 @@ function kirimPengingatSemua() {
   const belum = SISWA_MASTER.filter((n) => !sudahBayarPeriode(pos, n, per));
 
   if (!belum.length) {
-    showToast("Semua siswa sudah lunas, tidak ada yang perlu diingatkan 🎉");
+    showToast("Semua siswa sudah lunas, tidak ada yang perlu diingatkan.");
 
     return;
   }
@@ -838,7 +942,7 @@ function kirimPengingatSemua() {
 
       render();
 
-      showToast(`🔔 Pengingat terkirim ke ${terkirim} siswa`);
+      showToast(`Pengingat terkirim ke ${terkirim} siswa`);
     },
     { yesLabel: "Ya, kirim", yesClass: "btn-teal" },
   );
@@ -903,7 +1007,7 @@ function renderNotifPanel() {
           title="Tutup"
           aria-label="Tutup notifikasi"
         >
-          ✕
+          ${icon("tutup")}
         </button>
 
       </div>
@@ -931,7 +1035,7 @@ function renderNotifPanel() {
                           ${esc(n.judul || "Pengingat")}
                           ${
                             lunas
-                              ? `<span class="badge badge-ok">Sudah lunas ✓</span>`
+                              ? `<span class="badge badge-ok">${icon("centang")}Sudah lunas</span>`
                               : isBaru
                                 ? `<span class="badge badge-warn">Baru</span>`
                                 : ""
@@ -943,7 +1047,7 @@ function renderNotifPanel() {
                         </div>
 
                         <div class="notif-meta">
-                          ${esc(n.jabatan || "Bendahara")} · ${esc(fmtWaktu(n.createdAt))}
+                          ${esc(n.jabatan || "Bendahara")}, ${esc(fmtWaktu(n.createdAt))}
                         </div>
 
                       </div>
@@ -956,7 +1060,7 @@ function renderNotifPanel() {
               <div class="empty">
 
                 <div class="big">
-                  🔔
+                  ${icon("lonceng")}
                 </div>
 
                 Belum ada notifikasi.
@@ -979,7 +1083,7 @@ function bannerPengingat() {
         <div class="reminder-banner">
 
           <div class="reminder-ic">
-            🔔
+            ${icon("lonceng")}
           </div>
 
           <div class="reminder-text">
@@ -1041,6 +1145,8 @@ let ui = {
 
   loginTab: "siswa",
 
+  forgotStep: 1,
+
   regRole: "siswa",
 
   view: "dashboard",
@@ -1063,6 +1169,21 @@ let ui = {
 
   notifBaruIds: [],
 
+  // papan absen: petak yang dipilih (nama), filter daftar, dan animasi masuk
+  siswaPilih: null,
+
+  filterStatus: "semua",
+
+  papanAnim: true,
+
+  fokusSebelumDialog: null,
+
+  // isian masuk/daftar yang dipertahankan saat gagal (password tidak pernah
+  // disimpan) dan kolom yang difokuskan agar tidak perlu mengetik ulang
+  authDraft: null,
+
+  fokusAuth: null,
+
   msg: null,
 
   confirmDialog: null,
@@ -1072,7 +1193,62 @@ let ui = {
    RENDER
 ============================================================ */
 
+// Seluruh tampilan digambar ulang setiap kali ada perubahan, jadi fokus papan
+// ketik harus dikembalikan ke tombol yang sama supaya tidak "hilang".
+function kunciFokus(el) {
+  if (!el || !el.dataset || !el.dataset.act || !el.closest("#app")) {
+    return null;
+  }
+
+  const zona = el.closest(
+    ".mobile-menu, .sidebar, .topbar, .notif-panel, .main, .auth-card",
+  );
+
+  return {
+    zona: zona ? zona.classList[0] : "",
+    act: el.dataset.act,
+    id: el.dataset.id || "",
+    val: el.dataset.val || "",
+    nama: el.dataset.nama || "",
+    view: el.dataset.view || "",
+  };
+}
+
+function pulihkanFokus(kunci) {
+  if (!kunci) {
+    return;
+  }
+
+  const zona = kunci.zona
+    ? document.querySelector("#app ." + kunci.zona)
+    : document.getElementById("app");
+
+  if (!zona) {
+    return;
+  }
+
+  const cocok = Array.from(
+    zona.querySelectorAll('[data-act="' + kunci.act + '"]'),
+  ).find(
+    (el) =>
+      (el.dataset.id || "") === kunci.id &&
+      (el.dataset.val || "") === kunci.val &&
+      (el.dataset.nama || "") === kunci.nama &&
+      (el.dataset.view || "") === kunci.view,
+  );
+
+  if (cocok) {
+    try {
+      cocok.focus({ preventScroll: true });
+    } catch (err) {
+      cocok.focus();
+    }
+  }
+}
+
 function render() {
+  const fokus = kunciFokus(document.activeElement);
+
   document.getElementById("app").innerHTML = session
     ? renderShell()
     : renderAuth();
@@ -1081,6 +1257,8 @@ function render() {
 
   if (ui.confirmDialog) {
     renderConfirmDialog();
+  } else {
+    pulihkanFokus(fokus);
   }
 }
 
@@ -1088,97 +1266,74 @@ function render() {
    AUTH
 ============================================================ */
 
-function renderAuth() {
-  const net = `
-    <div class="net-bg">
+// Sisi kiri halaman masuk (layar lebar saja): papan nomor absen sebagai hiasan.
+function authAside() {
+  const petak = SISWA_MASTER.map((_, i) => `<li>${i + 1}</li>`).join("");
 
-      <div class="blob blob1"></div>
-      <div class="blob blob2"></div>
-      <div class="blob blob3"></div>
+  return `
+    <aside class="auth-aside" aria-hidden="true">
 
-      <svg
-        viewBox="0 0 600 600"
-        xmlns="http://www.w3.org/2000/svg"
-        width="100%"
-        height="100%"
-      >
+      <p class="auth-claim">
+        ${SISWA_MASTER.length} siswa, ${BENDAHARA_MASTER.length} bendahara, satu buku kas.
+      </p>
 
-        <g
-          stroke="#215A4B"
-          stroke-width="1"
-        >
+      <ol class="auth-board">${petak}</ol>
 
-          <line
-            x1="40"
-            y1="80"
-            x2="180"
-            y2="160"
-          />
+      <p class="auth-caption">
+        Kas rutin, dana acara, dan dana kurban kelas X TKJT 1.
+      </p>
 
-          <line
-            x1="180"
-            y1="160"
-            x2="120"
-            y2="300"
-          />
+    </aside>
+  `;
+}
 
-          <line
-            x1="180"
-            y1="160"
-            x2="340"
-            y2="120"
-          />
+function pesanAuth() {
+  if (!ui.msg) {
+    return "";
+  }
 
-          <line
-            x1="340"
-            y1="120"
-            x2="480"
-            y2="60"
-          />
+  const galat = ui.msg.type === "error";
 
-          <line
-            x1="120"
-            y1="300"
-            x2="260"
-            y2="380"
-          />
-
-          <line
-            x1="260"
-            y1="380"
-            x2="420"
-            y2="340"
-          />
-
-        </g>
-
-      </svg>
-
+  return `
+    <div
+      id="auth-pesan"
+      class="alert ${galat ? "alert-error" : "alert-ok"}"
+      role="${galat ? "alert" : "status"}"
+    >
+      ${icon(galat ? "tanda" : "centang")}
+      <span>${esc(ui.msg.text)}</span>
     </div>
   `;
+}
 
+function renderAuth() {
   const fab = `
     <button
       class="theme-fab"
       data-act="toggleTheme"
       title="Ganti tema"
+      aria-label="${theme === "dark" ? "Ganti ke tema terang" : "Ganti ke tema gelap"}"
     >
-      ${theme === "dark" ? "☀️" : "🌙"}
+      ${icon(theme === "dark" ? "matahari" : "bulan")}
     </button>
   `;
 
-  return (
-    net + fab + (ui.authView === "register" ? renderRegister() : renderLogin())
-  );
+  if (ui.authView === "forgot") return fab + renderForgotPassword();
+
+  return fab + (ui.authView === "register" ? renderRegister() : renderLogin());
 }
 
 function renderLogin() {
   const t = ui.loginTab;
 
+  const draf = ui.authDraft || {};
+
   return `
     <div class="center-screen">
 
       <div class="auth-wrap">
+
+        ${authAside()}
 
         <div class="auth-card">
 
@@ -1215,44 +1370,35 @@ function renderLogin() {
           <div
             class="tabs"
             data-active="${t}"
+            role="group"
+            aria-label="Peran"
           >
 
-            <div
-              class="tab-indicator"
-            ></div>
-
             <button
+              type="button"
               data-act="loginTab"
               data-val="siswa"
               class="${t === "siswa" ? "active" : ""}"
+              aria-pressed="${t === "siswa" ? "true" : "false"}"
             >
-              👨‍🎓 Siswa
+              ${icon("siswa")}
+              Siswa
             </button>
 
             <button
+              type="button"
               data-act="loginTab"
               data-val="bendahara"
               class="${t === "bendahara" ? "active" : ""}"
+              aria-pressed="${t === "bendahara" ? "true" : "false"}"
             >
-              🔐 Bendahara
+              ${icon("kunci")}
+              Bendahara
             </button>
 
           </div>
 
-          ${
-            ui.msg
-              ? `
-                <div
-                  class="
-                    alert
-                    ${ui.msg.type === "error" ? "alert-error" : "alert-ok"}
-                  "
-                >
-                  ${esc(ui.msg.text)}
-                </div>
-              `
-              : ""
-          }
+          ${pesanAuth()}
 
           <form
             data-form="login"
@@ -1266,13 +1412,17 @@ function renderLogin() {
 
             <div class="field">
 
-              <label>
-                👤 Username
+              <label for="login-username">
+                Username
               </label>
 
               <input
+                id="login-username"
                 name="username"
+                value="${esc(draf.username || "")}"
                 autocomplete="username"
+                autocapitalize="none"
+                spellcheck="false"
                 placeholder="misal. abdurrahman"
                 required
               >
@@ -1281,11 +1431,12 @@ function renderLogin() {
 
             <div class="field">
 
-              <label>
-                🔒 Password
+              <label for="login-password">
+                Password
               </label>
 
               <input
+                id="login-password"
                 name="password"
                 type="password"
                 autocomplete="current-password"
@@ -1309,10 +1460,15 @@ function renderLogin() {
           </form>
 
           <div class="switch-link">
+            <button type="button" data-act="goForgot">Lupa password?</button>
+          </div>
+
+          <div class="switch-link">
 
             Belum punya akun?
 
             <button
+              type="button"
               data-act="goRegister"
             >
               Buat akun sendiri
@@ -1337,15 +1493,139 @@ function availableNames(role) {
   return master.filter((name) => !taken.includes(name));
 }
 
-function renderRegister() {
-  const role = ui.regRole;
-
-  const names = availableNames(role);
+function renderForgotPassword() {
+  const draf = ui.authDraft || {};
 
   return `
     <div class="center-screen">
 
       <div class="auth-wrap">
+
+        ${authAside()}
+
+        <div class="auth-card">
+
+          <div class="brand">
+            <div class="brand-mark">TKJ</div>
+            <div class="brand-text">
+              <div class="t1">Informasi Kas Kelas X TKJT 1</div>
+              <div class="t2">Pemulihan akun</div>
+            </div>
+          </div>
+
+          <h1 class="auth-title">Lupa password?</h1>
+
+          <p class="auth-sub">
+            Masukkan data akun untuk memverifikasi kepemilikan akun,
+            lalu buat password baru.
+          </p>
+
+          ${pesanAuth()}
+
+          <form data-form="forgotPassword">
+
+            <div class="field">
+              <label for="forgot-role">Peran</label>
+              <select id="forgot-role" name="role" required>
+                <option value="siswa" ${draf.role === "siswa" ? "selected" : ""}>Siswa</option>
+                <option value="bendahara" ${draf.role === "bendahara" ? "selected" : ""}>Bendahara</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="forgot-username">Username</label>
+              <input
+                id="forgot-username"
+                name="username"
+                value="${esc(draf.username || "")}"
+                autocomplete="username"
+                autocapitalize="none"
+                spellcheck="false"
+                placeholder="Username akun"
+                required
+              >
+            </div>
+
+            <div class="field">
+              <label for="forgot-nama">Nama sesuai akun</label>
+              <input
+                id="forgot-nama"
+                name="nama"
+                value="${esc(draf.nama || "")}"
+                autocomplete="name"
+                placeholder="Nama yang dipilih saat membuat akun"
+                required
+              >
+            </div>
+
+            <div class="form-row cols-2">
+              <div class="field">
+                <label for="forgot-password">Password baru</label>
+                <input
+                  id="forgot-password"
+                  name="password"
+                  type="password"
+                  autocomplete="new-password"
+                  minlength="4"
+                  placeholder="Minimal 4 karakter"
+                  required
+                >
+              </div>
+
+              <div class="field">
+                <label for="forgot-password2">Ulangi password</label>
+                <input
+                  id="forgot-password2"
+                  name="password2"
+                  type="password"
+                  autocomplete="new-password"
+                  minlength="4"
+                  placeholder="Ulangi password"
+                  required
+                >
+              </div>
+            </div>
+
+            <div class="locked-note">
+              ${icon("kunci")}
+              <span>
+                Pemulihan ini bekerja pada data akun yang tersimpan di perangkat
+                ini. Jika aplikasi dipindahkan ke perangkat lain, data akun juga
+                harus tersedia di perangkat tersebut.
+              </span>
+            </div>
+
+            <button class="btn btn-primary" type="submit">
+              ${icon("kunci")}
+              Simpan password baru
+            </button>
+
+          </form>
+
+          <div class="switch-link">
+            Ingat password?
+            <button type="button" data-act="goLogin">Kembali ke masuk</button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderRegister() {
+  const role = ui.regRole;
+
+  const names = availableNames(role);
+
+  const draf = ui.authDraft || {};
+
+  return `
+    <div class="center-screen">
+
+      <div class="auth-wrap">
+
+        ${authAside()}
 
         <div class="auth-card">
 
@@ -1382,44 +1662,35 @@ function renderRegister() {
           <div
             class="tabs"
             data-active="${role}"
+            role="group"
+            aria-label="Peran"
           >
 
-            <div
-              class="tab-indicator"
-            ></div>
-
             <button
+              type="button"
               data-act="regRole"
               data-val="siswa"
               class="${role === "siswa" ? "active" : ""}"
+              aria-pressed="${role === "siswa" ? "true" : "false"}"
             >
-              👨‍🎓 Siswa
+              ${icon("siswa")}
+              Siswa
             </button>
 
             <button
+              type="button"
               data-act="regRole"
               data-val="bendahara"
               class="${role === "bendahara" ? "active" : ""}"
+              aria-pressed="${role === "bendahara" ? "true" : "false"}"
             >
-              🔐 Bendahara
+              ${icon("kunci")}
+              Bendahara
             </button>
 
           </div>
 
-          ${
-            ui.msg
-              ? `
-                <div
-                  class="
-                    alert
-                    ${ui.msg.type === "error" ? "alert-error" : "alert-ok"}
-                  "
-                >
-                  ${esc(ui.msg.text)}
-                </div>
-              `
-              : ""
-          }
+          ${pesanAuth()}
 
           <form
             data-form="register"
@@ -1433,11 +1704,12 @@ function renderRegister() {
 
             <div class="field">
 
-              <label>
-                🎓 Nama sesuai data kelas
+              <label for="reg-nama">
+                Nama sesuai data kelas
               </label>
 
               <select
+                id="reg-nama"
                 name="nama"
                 required
               >
@@ -1455,8 +1727,9 @@ function renderRegister() {
                     (name) => `
                       <option
                         value="${esc(name)}"
+                        ${draf.nama === name ? "selected" : ""}
                       >
-                        ${esc(name)}
+                        ${tampilNama(name)}
                       </option>
                     `,
                   )
@@ -1468,12 +1741,17 @@ function renderRegister() {
 
             <div class="field">
 
-              <label>
-                👤 Buat username
+              <label for="reg-username">
+                Buat username
               </label>
 
               <input
+                id="reg-username"
                 name="username"
+                value="${esc(draf.username || "")}"
+                autocomplete="username"
+                autocapitalize="none"
+                spellcheck="false"
                 placeholder="Bebas, tanpa spasi"
                 required
               >
@@ -1482,13 +1760,15 @@ function renderRegister() {
 
             <div class="field">
 
-              <label>
-                🔒 Buat password
+              <label for="reg-password">
+                Buat password
               </label>
 
               <input
+                id="reg-password"
                 name="password"
                 type="password"
+                autocomplete="new-password"
                 minlength="4"
                 required
               >
@@ -1497,13 +1777,15 @@ function renderRegister() {
 
             <div class="field">
 
-              <label>
-                🔒 Ulangi password
+              <label for="reg-password2">
+                Ulangi password
               </label>
 
               <input
+                id="reg-password2"
                 name="password2"
                 type="password"
+                autocomplete="new-password"
                 minlength="4"
                 required
               >
@@ -1528,6 +1810,7 @@ function renderRegister() {
             Sudah punya akun?
 
             <button
+              type="button"
               data-act="goLogin"
             >
               Masuk
@@ -1550,49 +1833,49 @@ function renderRegister() {
 const NAV = [
   {
     id: "dashboard",
-    ic: "📊",
+    ic: "dashboard",
     label: "Dashboard",
   },
 
   {
     id: "kasmasuk",
-    ic: "💰",
+    ic: "masuk",
     label: "Kas Masuk",
   },
 
   {
     id: "pengeluaran",
-    ic: "💸",
+    ic: "keluar",
     label: "Pengeluaran",
   },
 
   {
     id: "target",
-    ic: "🎯",
+    ic: "target",
     label: "Target",
   },
 
   {
     id: "kalender",
-    ic: "🗓️",
+    ic: "kalender",
     label: "Kalender",
     bendaharaOnly: true,
   },
 
   {
     id: "qris",
-    ic: "🧾",
+    ic: "qris",
     label: "QRIS",
   },
 
   {
     id: "pengaturan",
-    ic: "⚙️",
+    ic: "pengaturan",
     label: "Pengaturan",
   },
   {
     id: "kelolaakun",
-    ic: "👥",
+    ic: "akun",
     label: "Kelola Akun",
     bendaharaOnly: true,
   },
@@ -1602,126 +1885,85 @@ const NAV = [
    SHELL + MOBILE MENU
 ============================================================ */
 
+function navButtons() {
+  return NAV.filter((nav) => !nav.bendaharaOnly || session.role === "bendahara")
+    .map(
+      (nav) => `
+        <button
+          class="navitem ${ui.view === nav.id ? "active" : ""}"
+          data-act="nav"
+          data-view="${nav.id}"
+          ${ui.view === nav.id ? 'aria-current="page"' : ""}
+        >
+          <span class="ic">${icon(nav.ic)}</span>
+          ${nav.label}
+        </button>
+      `,
+    )
+    .join("");
+}
+
 function renderShell() {
   const roleLabel =
     session.role === "bendahara" ? session.jabatan : "Siswa TKJT 1";
 
   const notifBaru = jumlahNotifBaru();
 
+  const nama = tampilNama(session.nama);
+
   return `
-
-    <!-- ==================================
-         MOBILE SIDE MENU
-    =================================== -->
-
     <div
-      class="
-        mobile-menu-overlay
-        ${ui.mobileMenuOpen ? "open" : ""}
-      "
+      class="mobile-menu-overlay ${ui.mobileMenuOpen ? "open" : ""}"
       data-act="closeMobileMenu"
     ></div>
 
     <aside
-      class="
-        mobile-menu
-        ${ui.mobileMenuOpen ? "open" : ""}
-      "
+      class="mobile-menu ${ui.mobileMenuOpen ? "open" : ""}"
+      aria-label="Menu navigasi"
     >
 
-      <div
-        class="
-          mobile-menu-head
-        "
-      >
+      <div class="mobile-menu-head">
 
-        <div>
+        <div class="avatar">${initials(session.nama)}</div>
 
-          <div
-            class="
-              mobile-menu-title
-            "
-          >
-            Kas TKJT 1
-          </div>
-
-          <div
-            class="muted"
-            style="
-              font-size:11px;
-              margin-top:3px;
-            "
-          >
-            Menu navigasi
-          </div>
-
+        <div class="mm-who">
+          <span class="name">${nama}</span>
+          <span class="role-badge">${esc(roleLabel)}</span>
         </div>
 
         <button
-          class="
-            mobile-menu-close
-          "
+          class="mobile-menu-close"
           data-act="closeMobileMenu"
           title="Tutup menu"
+          aria-label="Tutup menu"
         >
-          ✕
+          ${icon("tutup")}
         </button>
 
       </div>
 
-      ${NAV.filter((nav) => !nav.bendaharaOnly || session.role === "bendahara")
-        .map(
-          (nav) => `
-          <button
-            class="
-              navitem
-              ${ui.view === nav.id ? "active" : ""}
-            "
-            data-act="nav"
-            data-view="${nav.id}"
-          >
-
-            <span class="ic">
-              ${nav.ic}
-            </span>
-
-            ${nav.label}
-
-          </button>
-        `,
-        )
-        .join("")}
+      ${navButtons()}
 
     </aside>
 
-    <!-- ==================================
-         TOPBAR
-    =================================== -->
-
-    <div class="topbar no-print">
+    <header class="topbar no-print">
 
       <button
-        class="
-          mobile-menu-btn
-        "
+        class="mobile-menu-btn"
         data-act="toggleMobileMenu"
         title="Buka menu"
         aria-label="Buka menu"
       >
-        ☰
+        ${icon("menu")}
       </button>
 
       <div class="brand">
 
-        <div class="brand-mark">
-          TKJ
-        </div>
+        <div class="brand-mark">TKJ</div>
 
         <div class="brand-text">
 
-          <div class="t1">
-            Kas TKJT 1
-          </div>
+          <div class="t1">Kas TKJT 1</div>
 
           <div class="t2">
             ${session.role === "bendahara" ? "Panel Bendahara" : "Panel Siswa"}
@@ -1733,31 +1975,23 @@ function renderShell() {
 
       <div class="who">
 
-        <div>
+        <div class="who-text">
 
-          <div class="name">
-            ${esc(session.nama)}
-          </div>
+          <div class="name">${nama}</div>
 
-          <span
-            class="role-badge"
-          >
-            ${esc(roleLabel)}
-          </span>
+          <span class="role-badge">${esc(roleLabel)}</span>
 
         </div>
 
-        <div class="avatar">
-          ${initials(session.nama)}
-        </div>
+        <div class="avatar">${initials(session.nama)}</div>
 
         <button
           class="icon-btn notif-btn"
           data-act="toggleNotif"
           title="Notifikasi"
-          aria-label="Notifikasi"
+          aria-label="Notifikasi${notifBaru ? `, ${notifBaru} baru` : ""}"
         >
-          🔔
+          ${icon("lonceng")}
           ${
             notifBaru
               ? `<span class="notif-badge">${notifBaru > 9 ? "9+" : notifBaru}</span>`
@@ -1769,86 +2003,43 @@ function renderShell() {
           class="icon-btn"
           data-act="toggleTheme"
           title="Ganti tema"
+          aria-label="${theme === "dark" ? "Ganti ke tema terang" : "Ganti ke tema gelap"}"
         >
-          ${theme === "dark" ? "☀️" : "🌙"}
+          ${icon(theme === "dark" ? "matahari" : "bulan")}
         </button>
 
         <button
           class="icon-btn"
           data-act="logout"
           title="Keluar"
+          aria-label="Keluar"
         >
-          🚪
+          ${icon("keluar-akun")}
         </button>
 
       </div>
 
-    </div>
+    </header>
 
     ${ui.notifOpen ? renderNotifPanel() : ""}
 
-    <!-- ==================================
-         MAIN LAYOUT
-    =================================== -->
-
     <div class="layout">
 
-      <!-- DESKTOP SIDEBAR -->
-
-      <aside
-        class="
-          sidebar
-          no-print
-        "
-      >
-
-        ${NAV.filter(
-          (nav) => !nav.bendaharaOnly || session.role === "bendahara",
-        )
-          .map(
-            (nav) => `
-            <button
-              class="
-                navitem
-                ${ui.view === nav.id ? "active" : ""}
-              "
-              data-act="nav"
-              data-view="${nav.id}"
-            >
-
-              <span class="ic">
-                ${nav.ic}
-              </span>
-
-              ${nav.label}
-
-            </button>
-          `,
-          )
-          .join("")}
-
+      <aside class="sidebar no-print" aria-label="Navigasi">
+        ${navButtons()}
       </aside>
-
-      <!-- CONTENT -->
 
       <main class="main">
 
         ${renderPage()}
 
-        <div
-          class="
-            footer-note
-            no-print
-          "
-        >
-          Kas TKJT 1 · data tersimpan
-          di perangkat ini
+        <div class="footer-note no-print">
+          Kas TKJT 1. Data tersimpan di perangkat ini.
         </div>
 
       </main>
 
     </div>
-
   `;
 }
 
@@ -1886,7 +2077,7 @@ function renderPage() {
 
 function posTabs() {
   return `
-    <div class="tabs">
+    <div class="tabs tabs-pos" role="group" aria-label="Pilih pos dana">
 
       ${POS.map(
         (p) => `
@@ -1894,6 +2085,7 @@ function posTabs() {
             data-act="setPos"
             data-val="${p.key}"
             class="${ui.pos === p.key ? "active" : ""}"
+            aria-pressed="${ui.pos === p.key ? "true" : "false"}"
           >
             ${p.icon}
             ${p.label}
@@ -1919,6 +2111,61 @@ function pageDashboard() {
   return dashboardPos(pos);
 }
 
+// Panel saldo: satu angka utama + rincian bertitik-titik seperti buku kas.
+//   baris: [{ ikon, k, v, teks }]  (teks=true -> v ditampilkan apa adanya)
+function panelSaldo({ ikon, judul, nilai, sub, baris, compact }) {
+  const minus = Number(nilai) < 0;
+
+  return `
+    <section class="card saldo ${compact ? "compact" : ""}">
+
+      <div>
+
+        <div class="lbl">
+          ${ikon}
+          ${esc(judul)}
+        </div>
+
+        <div class="fig ${minus ? "neg" : ""}">
+          ${rupiahFig(nilai)}
+        </div>
+
+        ${sub ? `<div class="sub">${esc(sub)}</div>` : ""}
+
+        ${
+          minus
+            ? `<div class="sub neg">${icon("tanda", "ico-sm")} Pengeluaran lebih besar dari pemasukan.</div>`
+            : ""
+        }
+
+      </div>
+
+      <dl class="leaders">
+
+        ${baris
+          .map(
+            (b) => `
+              <div class="leader">
+
+                <dt class="k">${b.ikon || ""}${esc(b.k)}</dt>
+
+                <i class="dots" aria-hidden="true"></i>
+
+                <dd class="v ${b.teks ? "teks" : "rp"}">
+                  ${b.teks ? esc(b.v) : rupiah(b.v)}
+                </dd>
+
+              </div>
+            `,
+          )
+          .join("")}
+
+      </dl>
+
+    </section>
+  `;
+}
+
 function dashboardUtama() {
   return `
     <div class="page-head">
@@ -1933,76 +2180,24 @@ function dashboardUtama() {
 
     </div>
 
-    <div
-      class="grid stat stat-3"
-    >
-
-      <div
-        class="
-          card
-          stat-card
-          pos-good
-        "
-      >
-
-        <div class="lbl">
-          💰 Saldo kas rutin
-        </div>
-
-        <div class="val rp">
-          ${rupiah(saldoPos("Rutin"))}
-        </div>
-
-        <div class="sub">
-          Pos kamu
-        </div>
-
-      </div>
-
-      <div
-        class="
-          card
-          stat-card
-        "
-      >
-
-        <div class="lbl">
-          🎉 Saldo dana acara
-        </div>
-
-        <div class="val rp">
-          ${rupiah(saldoPos("Acara"))}
-        </div>
-
-        <div class="sub">
-          Bendahara Acara
-        </div>
-
-      </div>
-
-      <div
-        class="
-          card
-          stat-card
-          acc-purple
-        "
-      >
-
-        <div class="lbl">
-          🐐 Saldo dana kurban
-        </div>
-
-        <div class="val rp">
-          ${rupiah(saldoPos("Kurban"))}
-        </div>
-
-        <div class="sub">
-          Bendahara Kurban
-        </div>
-
-      </div>
-
-    </div>
+    ${panelSaldo({
+      ikon: icon("dompet"),
+      judul: "Saldo kas rutin",
+      nilai: saldoPos("Rutin"),
+      sub: "Pos kamu",
+      baris: [
+        {
+          ikon: icon("bendera"),
+          k: "Saldo dana acara",
+          v: saldoPos("Acara"),
+        },
+        {
+          ikon: icon("bulan-bintang"),
+          k: "Saldo dana kurban",
+          v: saldoPos("Kurban"),
+        },
+      ],
+    })}
 
     ${statusPembayaranBlock("Rutin")}
   `;
@@ -2038,12 +2233,7 @@ function dashboardPos(pos) {
       <p>
         Pengelolaan
 
-        <span
-          class="
-            pos-chip
-            ${pos}
-          "
-        >
+        <span class="pos-chip">
           ${meta.icon}
           ${meta.label}
         </span>
@@ -2052,85 +2242,29 @@ function dashboardPos(pos) {
 
     </div>
 
-    <div
-      class="grid stat"
-    >
-
-      <div
-        class="
-          card
-          stat-card
-          ${saldoPos(pos) >= 0 ? "pos-good" : "pos-bad"}
-        "
-      >
-
-        <div class="lbl">
-          ${meta.icon}
-          Saldo ${meta.label}
-        </div>
-
-        <div class="val rp">
-          ${rupiah(saldoPos(pos))}
-        </div>
-
-        <div class="sub">
-          Masuk - keluar
-        </div>
-
-      </div>
-
-      <div class="card stat-card">
-
-        <div class="lbl">
-          📥 Masuk bulan ini
-        </div>
-
-        <div class="val rp">
-          ${rupiah(masuk)}
-        </div>
-
-        <div class="sub">
-          Transaksi bulan ini
-        </div>
-
-      </div>
-
-      <div class="card stat-card">
-
-        <div class="lbl">
-          📤 Keluar bulan ini
-        </div>
-
-        <div class="val rp">
-          ${rupiah(keluar)}
-        </div>
-
-        <div class="sub">
-          Transaksi bulan ini
-        </div>
-
-      </div>
-
-      <div class="card stat-card">
-
-        <div class="lbl">
-          🎯 Target utama
-        </div>
-
-        <div class="val">
-          ${target ? esc(target.nama) : "Belum ada"}
-        </div>
-
-      </div>
-
-    </div>
+    ${panelSaldo({
+      ikon: meta.icon,
+      judul: `Saldo ${meta.label}`,
+      nilai: saldoPos(pos),
+      sub: "Masuk dikurangi keluar",
+      baris: [
+        { ikon: icon("masuk"), k: "Masuk bulan ini", v: masuk },
+        { ikon: icon("keluar"), k: "Keluar bulan ini", v: keluar },
+        {
+          ikon: icon("target"),
+          k: "Target utama",
+          v: target ? target.nama : "Belum ada",
+          teks: true,
+        },
+      ],
+    })}
 
     ${statusPembayaranBlock(pos)}
   `;
 }
 
 function dashboardSiswa() {
-  const curMonth = todayStr().slice(0, 7);
+  const per = periodeAktif("Rutin");
 
   const myPay = DB.kasMasuk.filter(
     (x) => x.pos === "Rutin" && x.siswa === session.nama,
@@ -2138,15 +2272,16 @@ function dashboardSiswa() {
 
   const myTotal = myPay.reduce((s, x) => s + Number(x.jumlah), 0);
 
-  const sudah = myPay.some((x) => monthKey(x.tanggal) === curMonth);
+  const sudah = sudahBayarPeriode("Rutin", session.nama, per);
+
+  const nominal = Number(nominalPos("Rutin").jumlah) || 0;
 
   return `
     <div class="page-head">
 
       <h1>
         Halo,
-        ${esc(session.nama.split(" ")[0])}
-        👋
+        ${tampilNama(session.nama.split(" ")[0])}
       </h1>
 
       <p>
@@ -2158,137 +2293,71 @@ function dashboardSiswa() {
 
     ${bannerPengingat()}
 
-    <div class="grid stat">
+    <section class="card status-saya ${sudah ? "lunas" : "belum"}">
 
-      <div
-        class="
-          card
-          stat-card
-          pos-good
-        "
-      >
-
-        <div class="lbl">
-          💰 Saldo kas rutin
-        </div>
-
-        <div class="val rp">
-          ${rupiah(saldoPos("Rutin"))}
-        </div>
-
+      <div class="lbl">
+        Status saya
       </div>
 
-      <div
-        class="
-          card
-          stat-card
-        "
-      >
-
-        <div class="lbl">
-          📌 Status saya
-        </div>
-
-        <div class="val">
-
-          ${
-            sudah
-              ? `
-                <span
-                  class="
-                    badge
-                    badge-ok
-                  "
-                >
-                  Sudah bayar ✓
-                </span>
-              `
-              : `
-                <span
-                  class="
-                    badge
-                    badge-warn
-                  "
-                >
-                  Belum bayar
-                </span>
-              `
-          }
-
-        </div>
-
+      <div class="ss-state">
+        ${icon(sudah ? "centang" : "jam")}
+        ${sudah ? "Sudah bayar" : "Belum bayar"}
       </div>
 
-      <div
-        class="
-          card
-          stat-card
-        "
-      >
-
-        <div class="lbl">
-          🧾 Total kontribusi
-        </div>
-
-        <div class="val rp">
-          ${rupiah(myTotal)}
-        </div>
-
-        <div class="sub">
-          ${myPay.length}
-          kali setoran
-        </div>
-
+      <div class="sub">
+        Kas rutin ${esc(per.nama)}${nominal ? `, ${rupiah(nominal)} per bulan` : ""}
       </div>
 
-    </div>
+      ${
+        sudah
+          ? ""
+          : `
+            <div class="form-actions">
 
-    <div class="section-title">
+              <button
+                class="btn btn-primary"
+                data-act="goPos"
+                data-view="qris"
+                data-val="Rutin"
+              >
+                ${icon("qris")}
+                Bayar lewat QRIS
+              </button>
 
-      <h2>
-        Pos dana lainnya
-      </h2>
+              <button
+                class="btn btn-outline"
+                data-act="goPos"
+                data-view="kasmasuk"
+                data-val="Rutin"
+              >
+                ${icon("unggah")}
+                Kirim bukti bayar
+              </button>
 
-    </div>
+            </div>
+          `
+      }
 
-    <div class="grid stat">
+    </section>
 
-      <div
-        class="
-          card
-          stat-card
-        "
-      >
-
-        <div class="lbl">
-          🎉 Saldo dana acara
-        </div>
-
-        <div class="val rp">
-          ${rupiah(saldoPos("Acara"))}
-        </div>
-
-      </div>
-
-      <div
-        class="
-          card
-          stat-card
-          acc-purple
-        "
-      >
-
-        <div class="lbl">
-          🐐 Saldo dana kurban
-        </div>
-
-        <div class="val rp">
-          ${rupiah(saldoPos("Kurban"))}
-        </div>
-
-      </div>
-
-    </div>
+    ${panelSaldo({
+      ikon: icon("dompet"),
+      judul: "Saldo kas rutin",
+      nilai: saldoPos("Rutin"),
+      compact: true,
+      baris: [
+        {
+          ikon: icon("bendera"),
+          k: "Saldo dana acara",
+          v: saldoPos("Acara"),
+        },
+        {
+          ikon: icon("bulan-bintang"),
+          k: "Saldo dana kurban",
+          v: saldoPos("Kurban"),
+        },
+      ],
+    })}
 
     <div class="section-title">
 
@@ -2296,17 +2365,25 @@ function dashboardSiswa() {
         Riwayat setoran saya
       </h2>
 
+      <span class="muted">
+        Total kontribusi ${rupiah(myTotal)}, ${myPay.length} kali setoran
+      </span>
+
     </div>
 
     ${renderKasTable(
       myPay.slice().sort((a, b) => b.tanggal.localeCompare(a.tanggal)),
       false,
+      true,
     )}
   `;
 }
 
 /* ============================================================
    STATUS PEMBAYARAN
+   Papan absen (38 petak bernomor) + daftar. Lunas = petak terisi
+   dengan centang; belum bayar = petak berbingkai kuning dengan
+   jam. Petak dipilih untuk melihat nama (layar sentuh).
 ============================================================ */
 
 function statusPembayaranBlock(pos) {
@@ -2328,7 +2405,7 @@ function statusPembayaranBlock(pos) {
         <div class="empty">
 
           <div class="big">
-            🎉
+            ${meta.icon}
           </div>
 
           Dana acara dikumpulkan
@@ -2348,66 +2425,179 @@ function statusPembayaranBlock(pos) {
     SISWA_MASTER.filter((name) => sudahBayarPeriode(pos, name, per)),
   );
 
-  const belumBayar = SISWA_MASTER.length - lunas.size;
+  const total = SISWA_MASTER.length;
+
+  const belumBayar = total - lunas.size;
 
   const bisaIngatkan = bolehMengingatkan(pos);
 
-  const barisSiswa = SISWA_MASTER.map((name) => {
+  const filter = ["semua", "belum", "lunas"].includes(ui.filterStatus)
+    ? ui.filterStatus
+    : "semua";
+
+  const pilih = SISWA_MASTER.includes(ui.siswaPilih) ? ui.siswaPilih : null;
+
+  const petak = SISWA_MASTER.map((name, i) => {
     const sudah = lunas.has(name);
 
-    const terkirim =
-      bisaIngatkan && !sudah ? pengingatTerkirim(pos, name) : null;
-
     return `
-      <tr>
-
-        <td data-label="Nama">
-          ${esc(name)}
-        </td>
-
-        <td data-label="Status">
-          ${
-            sudah
-              ? `<span class="badge badge-ok">Lunas</span>`
-              : `<span class="badge badge-warn">Belum bayar</span>`
-          }
-        </td>
-
-        ${
-          bisaIngatkan
-            ? `
-              <td data-label="Pengingat" class="no-print">
-                ${
-                  sudah
-                    ? `<span class="muted">-</span>`
-                    : `
-                      <div class="remind-cell">
-
-                        <button
-                          class="btn btn-soft btn-sm"
-                          data-act="kirimPengingat"
-                          data-nama="${esc(name)}"
-                        >
-                          ${terkirim ? "🔔 Ingatkan lagi" : "🔔 Ingatkan"}
-                        </button>
-
-                        ${
-                          terkirim
-                            ? `<span class="remind-sent">✓ Terkirim ${esc(fmtWaktu(terkirim.createdAt, true))}</span>`
-                            : ""
-                        }
-
-                      </div>
-                    `
-                }
-              </td>
-            `
-            : ""
-        }
-
-      </tr>
+      <li>
+        <button
+          type="button"
+          class="tile ${sudah ? "lunas" : "belum"}"
+          data-act="pilihSiswa"
+          data-nama="${esc(name)}"
+          data-no="${i + 1}"
+          data-status="${sudah ? "Lunas" : "Belum bayar"}"
+          aria-pressed="${pilih === name ? "true" : "false"}"
+          aria-label="Nomor ${i + 1}, ${tampilNama(name)}, ${sudah ? "lunas" : "belum bayar"}"
+          style="--i:${i}"
+        >
+          <span class="n">${i + 1}</span>
+          ${icon(sudah ? "centang" : "jam")}
+        </button>
+      </li>
     `;
   }).join("");
+
+  const keterangan = pilih
+    ? (() => {
+        const sudah = lunas.has(pilih);
+
+        const terkirim =
+          bisaIngatkan && !sudah ? pengingatTerkirim(pos, pilih) : null;
+
+        return `
+          <div class="papan-cap">
+
+            <div class="cap-name">
+              <span>No. ${SISWA_MASTER.indexOf(pilih) + 1}</span>
+              ${tampilNama(pilih)}
+            </div>
+
+            <div class="cap-aksi">
+
+              ${badgeStatus(sudah)}
+
+              ${
+                bisaIngatkan && !sudah
+                  ? `
+                    <button
+                      class="btn btn-soft btn-sm no-print"
+                      data-act="kirimPengingat"
+                      data-nama="${esc(pilih)}"
+                    >
+                      ${icon("kirim")}
+                      ${terkirim ? "Ingatkan lagi" : "Ingatkan"}
+                    </button>
+                  `
+                  : ""
+              }
+
+            </div>
+
+            <button
+              type="button"
+              class="icon-btn no-print"
+              data-act="pilihSiswa"
+              data-nama="${esc(pilih)}"
+              title="Tutup keterangan"
+              aria-label="Tutup keterangan"
+            >
+              ${icon("tutup")}
+            </button>
+
+          </div>
+        `;
+      })()
+    : "";
+
+  const chips = [
+    ["semua", "Semua", total],
+    ["belum", "Belum bayar", belumBayar],
+    ["lunas", "Lunas", lunas.size],
+  ]
+    .map(
+      ([kunci, label, jumlah]) => `
+        <button
+          type="button"
+          class="chip"
+          data-act="filterStatus"
+          data-val="${kunci}"
+          aria-pressed="${filter === kunci ? "true" : "false"}"
+        >
+          ${label}
+          <b>${jumlah}</b>
+        </button>
+      `,
+    )
+    .join("");
+
+  const daftar = SISWA_MASTER.map((name, i) => ({
+    name,
+    no: i + 1,
+    sudah: lunas.has(name),
+  })).filter(
+    (r) => filter === "semua" || (filter === "belum" ? !r.sudah : r.sudah),
+  );
+
+  const barisSiswa = daftar
+    .map(({ name, no, sudah }) => {
+      const terkirim =
+        bisaIngatkan && !sudah ? pengingatTerkirim(pos, name) : null;
+
+      return `
+        <tr class="${pilih === name ? "sorot" : ""}">
+
+          <td data-label="No">
+            ${no}
+          </td>
+
+          <td data-label="Nama">
+            ${tampilNama(name)}
+          </td>
+
+          <td data-label="Status">
+            ${badgeStatus(sudah)}
+          </td>
+
+          ${
+            bisaIngatkan
+              ? `
+                <td data-label="Pengingat" class="no-print ${sudah ? "kosong" : ""}">
+                  ${
+                    sudah
+                      ? `<span class="muted">-</span>`
+                      : `
+                        <div class="remind-cell">
+
+                          <button
+                            class="btn btn-soft btn-sm"
+                            data-act="kirimPengingat"
+                            data-nama="${esc(name)}"
+                          >
+                            ${icon("kirim")}
+                            ${terkirim ? "Ingatkan lagi" : "Ingatkan"}
+                          </button>
+
+                          ${
+                            terkirim
+                              ? `<span class="remind-sent">${icon("centang")}Terkirim ${esc(fmtWaktu(terkirim.createdAt, true))}</span>`
+                              : ""
+                          }
+
+                        </div>
+                      `
+                  }
+                </td>
+              `
+              : ""
+          }
+
+        </tr>
+      `;
+    })
+    .join("");
 
   return `
     <div class="section-title status-head">
@@ -2416,12 +2606,13 @@ function statusPembayaranBlock(pos) {
 
         <h2>
           Status pembayaran
-          ${meta.label} -
+          ${meta.label},
           ${per.label}
         </h2>
 
         <div class="period-note">
-          📅 ${esc(per.nama)} · ${per.info}
+          ${icon("kalender", "ico-sm")}
+          ${esc(per.nama)}, ${per.info}
         </div>
 
       </div>
@@ -2429,7 +2620,7 @@ function statusPembayaranBlock(pos) {
       <div class="status-actions">
 
         <span class="muted">
-          ${lunas.size}/${SISWA_MASTER.length} lunas
+          ${lunas.size}/${total} lunas
         </span>
 
         ${
@@ -2440,7 +2631,8 @@ function statusPembayaranBlock(pos) {
                 data-act="kirimPengingatSemua"
                 ${belumBayar ? "" : "disabled"}
               >
-                🔔 Ingatkan semua (${belumBayar})
+                ${icon("kirim")}
+                Ingatkan semua (${belumBayar})
               </button>
             `
             : ""
@@ -2450,29 +2642,83 @@ function statusPembayaranBlock(pos) {
 
     </div>
 
-    <div class="table-wrap status-wrap">
+    <section
+      class="card papan"
+      aria-label="Papan absen, ${lunas.size} dari ${total} siswa lunas"
+    >
 
-      <table class="status-table ${bisaIngatkan ? "has-aksi" : ""}">
+      <ol class="papan-grid ${ui.papanAnim ? "anim" : ""}">
+        ${petak}
+      </ol>
 
-        <thead>
+      ${keterangan}
 
-          <tr>
-            <th>Nama</th>
-            <th>Status</th>
-            ${bisaIngatkan ? `<th class="no-print">Pengingat</th>` : ""}
-          </tr>
+      <div class="papan-legend">
 
-        </thead>
+        <span><i class="k-lunas"></i>Lunas</span>
 
-        <tbody>
+        <span><i class="k-belum"></i>Belum bayar</span>
 
-          ${barisSiswa}
+        <span class="no-print">Pilih nomor untuk melihat namanya.</span>
 
-        </tbody>
+      </div>
 
-      </table>
+      <div class="tip" role="tooltip" hidden></div>
 
+    </section>
+
+    <div class="chips no-print" role="group" aria-label="Tampilkan siswa">
+      ${chips}
     </div>
+
+    ${
+      daftar.length
+        ? `
+          <div class="table-wrap status-wrap">
+
+            <table class="status-table ${bisaIngatkan ? "has-aksi" : ""}">
+
+              <thead>
+
+                <tr>
+                  <th class="c-no">No</th>
+                  <th>Nama</th>
+                  <th>Status</th>
+                  ${bisaIngatkan ? `<th class="no-print">Pengingat</th>` : ""}
+                </tr>
+
+              </thead>
+
+              <tbody>
+
+                ${barisSiswa}
+
+              </tbody>
+
+            </table>
+
+          </div>
+        `
+        : `
+          <div class="table-wrap">
+
+            <div class="empty">
+
+              <div class="big">
+                ${icon(filter === "lunas" ? "jam" : "centang")}
+              </div>
+
+              ${
+                filter === "lunas"
+                  ? "Belum ada yang lunas pada periode ini."
+                  : "Semua siswa sudah lunas."
+              }
+
+            </div>
+
+          </div>
+        `
+    }
   `;
 }
 
@@ -2521,85 +2767,71 @@ function pageKasMasuk() {
         ? `
           <div class="form-card">
 
-            <h3>
-              🕓 Menunggu verifikasi
+            <h2 class="card-title">
+              ${icon("jam")}
+              Menunggu verifikasi
               (${pending.length})
-            </h3>
+            </h2>
 
-            ${pending
-              .map(
-                (b) => `
-                  <div
-                    style="
-                      display:flex;
-                      gap:10px;
-                      align-items:center;
-                      padding:10px 0;
-                      border-bottom:
-                      1px solid
-                      var(--line-soft);
-                    "
-                  >
+            <ul class="verif">
 
-                    <button type="button" class="btn btn-outline btn-sm" data-act="lihatBukti" data-id="${b.id}" title="Lihat foto bukti" style="padding:3px;border:0;background:transparent">
-                      <img src="${b.gambar}" alt="Foto bukti QRIS" style="width:64px;height:64px;object-fit:cover;border-radius:8px;display:block">
-                    </button>
+              ${pending
+                .map(
+                  (b) => `
+                    <li class="verif-item">
 
-                    <div
-                      style="
-                        flex:1
-                      "
-                    >
-
-                      <strong>
-                        ${esc(b.siswa)}
-                      </strong>
-
-                      <div
-                        class="muted"
-                        style="
-                          font-size:12px
-                        "
+                      <button
+                        type="button"
+                        class="verif-thumb"
+                        data-act="lihatBukti"
+                        data-id="${b.id}"
+                        title="Lihat foto bukti"
                       >
-                        ${fmtDate(b.tanggal)}
-                        ·
-                        ${rupiah(b.jumlah)}
+                        <img
+                          src="${esc(b.gambar)}"
+                          alt="Foto bukti QRIS"
+                        >
+                      </button>
+
+                      <div class="verif-info">
+
+                        <strong>
+                          ${tampilNama(b.siswa)}
+                        </strong>
+
+                        <div class="muted">
+                          ${fmtDate(b.tanggal)},
+                          ${rupiah(b.jumlah)}
+                        </div>
+
                       </div>
 
-                    </div>
+                      <div class="verif-aksi">
 
-                    <div>
+                        <button
+                          class="btn btn-sm btn-primary"
+                          data-act="approveBukti"
+                          data-id="${b.id}"
+                        >
+                          Terima
+                        </button>
 
-                      <button
-                        class="
-                          btn
-                          btn-sm
-                          btn-primary
-                        "
-                        data-act="approveBukti"
-                        data-id="${b.id}"
-                      >
-                        Terima
-                      </button>
+                        <button
+                          class="btn btn-sm btn-danger"
+                          data-act="rejectBukti"
+                          data-id="${b.id}"
+                        >
+                          Tolak
+                        </button>
 
-                      <button
-                        class="
-                          btn
-                          btn-sm
-                          btn-danger
-                        "
-                        data-act="rejectBukti"
-                        data-id="${b.id}"
-                      >
-                        Tolak
-                      </button>
+                      </div>
 
-                    </div>
+                    </li>
+                  `,
+                )
+                .join("")}
 
-                  </div>
-                `,
-              )
-              .join("")}
+            </ul>
 
           </div>
         `
@@ -2611,9 +2843,10 @@ function pageKasMasuk() {
         ? `
           <div class="form-card">
 
-            <h3>
-              ${editing ? "✏️ Edit setoran" : "➕ Catat kas masuk"}
-            </h3>
+            <h2 class="card-title">
+              ${editing ? icon("pensil") : icon("tambah")}
+              ${editing ? "Edit setoran" : "Catat kas masuk"}
+            </h2>
 
             <form
               data-form="kasMasuk"
@@ -2653,7 +2886,7 @@ function pageKasMasuk() {
                           value="${esc(name)}"
                           ${editing && editing.siswa === name ? "selected" : ""}
                         >
-                          ${esc(name)}
+                          ${tampilNama(name)}
                         </option>
                       `,
                     ).join("")}
@@ -2783,190 +3016,10 @@ function pageKasMasuk() {
         ? `
           <div class="form-card">
 
-            <h3>
-              📤 Upload bukti transfer
-            </h3>
-
-            <form
-              data-form="bukti"
-            >
-
-              <div
-                class="
-                  form-row
-                  cols-3
-                "
-              >
-
-                <div class="field">
-
-                  <label>
-                    Tanggal
-                  </label>
-
-                  <input
-                    type="date"
-                    name="tanggal"
-                    value="${todayStr()}"
-                    required
-                  >
-
-                </div>
-
-                <div class="field">
-
-                  <label>
-                    Siswa
-                  </label>
-
-                  <select
-                    name="siswa"
-                    required
-                  >
-
-                    <option value="">
-                      Pilih siswa...
-                    </option>
-
-                    ${SISWA_MASTER.map(
-                      (name) => `
-                        <option
-                          value="${esc(name)}"
-                          ${editing && editing.siswa === name ? "selected" : ""}
-                        >
-                          ${esc(name)}
-                        </option>
-                      `,
-                    ).join("")}
-
-                  </select>
-
-                </div>
-
-                <div class="field">
-
-                  <label>
-                    Tanggal
-                  </label>
-
-                  <input
-                    type="date"
-                    name="tanggal"
-                    value="${editing ? editing.tanggal : todayStr()}"
-                    required
-                  >
-
-                </div>
-
-                <div class="field">
-
-                  <label>
-                    Jumlah
-                  </label>
-
-                  <input
-                    type="number"
-                    min="0"
-                    name="jumlah"
-                    value="${editing ? editing.jumlah : nom.jumlah || ""}"
-                    required
-                  >
-
-                </div>
-
-              </div>
-
-              <div
-                class="
-                  form-row
-                  cols-2
-                "
-              >
-
-                <div class="field">
-
-                  <label>
-                    Metode
-                  </label>
-
-                  <select
-                    name="metode"
-                  >
-
-                    <option value="Tunai">
-                      Tunai
-                    </option>
-
-                    <option value="QRIS">
-                      QRIS
-                    </option>
-
-                  </select>
-
-                </div>
-
-                <div class="field">
-
-                  <label>
-                    Keterangan
-                  </label>
-
-                  <input
-                    name="keterangan"
-                    placeholder="Keterangan"
-                    value="${editing ? esc(editing.keterangan || "") : ""}"
-                  >
-
-                </div>
-
-              </div>
-
-              <div class="form-actions">
-
-                <button
-                  class="
-                    btn
-                    btn-primary
-                  "
-                  type="submit"
-                >
-                  ${editing ? "Simpan perubahan" : "Simpan"}
-                </button>
-
-                ${
-                  editing
-                    ? `
-                      <button
-                        type="button"
-                        class="
-                          btn
-                          btn-outline
-                        "
-                        data-act="cancelEditKas"
-                      >
-                        Batal
-                      </button>
-                    `
-                    : ""
-                }
-
-              </div>
-
-            </form>
-
-          </div>
-        `
-        : ""
-    }
-
-    ${
-      session.role === "siswa"
-        ? `
-          <div class="form-card">
-
-            <h3>
-              📤 Upload bukti transfer
-            </h3>
+            <h2 class="card-title">
+              ${icon("unggah")}
+              Upload bukti transfer
+            </h2>
 
             <form
               data-form="bukti"
@@ -3074,7 +3127,7 @@ function pageKasMasuk() {
   `;
 }
 
-function renderKasTable(rows, editable) {
+function renderKasTable(rows, editable, tanpaSiswa = false) {
   if (!rows.length) {
     return `
       <div class="table-wrap">
@@ -3082,7 +3135,7 @@ function renderKasTable(rows, editable) {
         <div class="empty">
 
           <div class="big">
-            💰
+            ${icon("dompet")}
           </div>
 
           Belum ada catatan
@@ -3097,7 +3150,7 @@ function renderKasTable(rows, editable) {
   return `
     <div class="table-wrap">
 
-      <table>
+      <table class="t-kas${tanpaSiswa ? " saya" : ""}">
 
         <thead>
 
@@ -3107,11 +3160,9 @@ function renderKasTable(rows, editable) {
               Tanggal
             </th>
 
-            <th>
-              Siswa
-            </th>
+            ${tanpaSiswa ? "" : "<th>Siswa</th>"}
 
-            <th>
+            <th class="num">
               Jumlah
             </th>
 
@@ -3143,9 +3194,11 @@ function renderKasTable(rows, editable) {
                     ${fmtDate(row.tanggal)}
                   </td>
 
-                  <td data-label="Siswa">
-                    ${esc(row.siswa)}
-                  </td>
+                  ${
+                    tanpaSiswa
+                      ? ""
+                      : `<td data-label="Siswa">${tampilNama(row.siswa)}</td>`
+                  }
 
                   <td
                     data-label="Jumlah"
@@ -3158,12 +3211,7 @@ function renderKasTable(rows, editable) {
                     data-label="Metode"
                   >
 
-                    <span
-                      class="
-                        badge
-                        ${row.metode === "QRIS" ? "badge-info" : "badge-ok"}
-                      "
-                    >
+                    <span class="badge badge-info">
                       ${esc(row.metode || "Tunai")}
                     </span>
 
@@ -3171,6 +3219,7 @@ function renderKasTable(rows, editable) {
 
                   <td
                     data-label="Keterangan"
+                    class="${row.keterangan ? "" : "kosong"}"
                   >
                     ${esc(row.keterangan || "-")}
                   </td>
@@ -3190,6 +3239,7 @@ function renderKasTable(rows, editable) {
                             "
                             data-act="editKas"
                             data-id="${row.id}"
+                            aria-label="Edit setoran ${tampilNama(row.siswa)}"
                           >
                             Edit
                           </button>
@@ -3202,6 +3252,7 @@ function renderKasTable(rows, editable) {
                             "
                             data-act="delKas"
                             data-id="${row.id}"
+                            aria-label="Hapus setoran ${tampilNama(row.siswa)}"
                           >
                             Hapus
                           </button>
@@ -3262,9 +3313,10 @@ function pagePengeluaran() {
         ? `
           <div class="form-card">
 
-            <h3>
-              ${editing ? "✏️ Edit pengeluaran" : "➕ Catat pengeluaran"}
-            </h3>
+            <h2 class="card-title">
+              ${editing ? icon("pensil") : icon("tambah")}
+              ${editing ? "Edit pengeluaran" : "Catat pengeluaran"}
+            </h2>
 
             <form
               data-form="pengeluaran"
@@ -3411,7 +3463,7 @@ function pagePengeluaran() {
             <div class="empty">
 
               <div class="big">
-                💸
+                ${icon("keluar")}
               </div>
 
               Belum ada data
@@ -3424,7 +3476,7 @@ function pagePengeluaran() {
         : `
           <div class="table-wrap">
 
-            <table>
+            <table class="t-keluar">
 
               <thead>
 
@@ -3433,7 +3485,7 @@ function pagePengeluaran() {
                   <th>Tanggal</th>
                   <th>Kategori</th>
                   <th>Keterangan</th>
-                  <th>Jumlah</th>
+                  <th class="num">Jumlah</th>
 
                   ${canManage ? "<th>Aksi</th>" : ""}
 
@@ -3569,9 +3621,10 @@ function pageTarget() {
         ? `
           <div class="form-card">
 
-            <h3>
-              ${editing ? "✏️ Edit target" : "➕ Tambah target"}
-            </h3>
+            <h2 class="card-title">
+              ${editing ? icon("pensil") : icon("tambah")}
+              ${editing ? "Edit target" : "Tambah target"}
+            </h2>
 
             <form
               data-form="target"
@@ -3681,8 +3734,7 @@ function pageTarget() {
                         type="button"
                         class="
                           btn
-                
-                             btn-outline
+                          btn-outline
                         "
                         data-act="cancelEditTarget"
                       >
@@ -3706,7 +3758,7 @@ function pageTarget() {
     >
 
       <h2>
-        Daftar target -
+        Daftar target
         ${meta.label}
       </h2>
 
@@ -3720,7 +3772,7 @@ function pageTarget() {
             <div class="empty">
 
               <div class="big">
-                🎯
+                ${icon("target")}
               </div>
 
               Belum ada target.
@@ -3742,117 +3794,101 @@ function pageTarget() {
               );
 
               return `
-                  <div
-                    class="
-                      card
-                      target-card
-                    "
-                  >
+                <div class="card target-card">
 
-                    <div class="top">
+                  <div class="top">
 
-                      <div>
+                    <div>
 
-                        <div class="nm">
-                          ${esc(target.nama)}
-                        </div>
-
+                      <div class="nm">
+                        ${esc(target.nama)}
                         ${
-                          target.keterangan
-                            ? `
-                              <div
-                                class="ket"
-                              >
-                                ${esc(target.keterangan)}
-                              </div>
-                            `
+                          percent >= 100
+                            ? `<span class="badge badge-ok">${icon("centang")}Tercapai</span>`
                             : ""
                         }
-
                       </div>
 
                       ${
-                        canManage
-                          ? `
-                            <div>
-
-                              <button
-                                class="
-                                  btn
-                                  btn-sm
-                                  btn-outline
-                                "
-                                data-act="editTarget"
-                                data-id="${target.id}"
-                              >
-                                Edit
-                              </button>
-
-                              <button
-                                class="
-                                  btn
-                                  btn-sm
-                                  btn-danger
-                                "
-                                data-act="delTarget"
-                                data-id="${target.id}"
-                              >
-                                Hapus
-                              </button>
-
-                            </div>
-                          `
-                          : `
-                            <span
-                              class="
-                                badge
-                                ${percent >= 100 ? "badge-ok" : "badge-warn"}
-                              "
-                            >
-                              ${percent}%
-                            </span>
-                          `
+                        target.keterangan
+                          ? `<div class="ket">${esc(target.keterangan)}</div>`
+                          : ""
                       }
 
                     </div>
 
+                    ${
+                      canManage
+                        ? `
+                          <div class="aksi">
+
+                            <button
+                              class="btn btn-sm btn-outline"
+                              data-act="editTarget"
+                              data-id="${target.id}"
+                              aria-label="Edit target ${esc(target.nama)}"
+                            >
+                              Edit
+                            </button>
+
+                            <button
+                              class="btn btn-sm btn-danger"
+                              data-act="delTarget"
+                              data-id="${target.id}"
+                              aria-label="Hapus target ${esc(target.nama)}"
+                            >
+                              Hapus
+                            </button>
+
+                          </div>
+                        `
+                        : ""
+                    }
+
+                  </div>
+
+                  <div class="meter-row">
+
                     <div
-                      class="
-                        progress-outer
-                      "
+                      class="progress-outer"
+                      role="progressbar"
+                      aria-valuemin="0"
+                      aria-valuemax="100"
+                      aria-valuenow="${percent}"
+                      aria-label="Terkumpul ${percent} persen untuk ${esc(target.nama)}"
                     >
 
                       <div
                         class="progress-inner"
-                        style="
-                          width:${percent}%
-                        "
+                        style="width:${percent}%"
                       ></div>
 
                     </div>
 
-                    <div
-                      class="nums"
-                    >
-
-                      <span>
-                        Terkumpul:
-                        <b class="rp">
-                          ${rupiah(target.terkumpul)}
-                        </b>
-                      </span>
-
-                      <span>
-                        Target:
-                        <b class="rp">
-                          ${rupiah(target.jumlahTarget)}
-                        </b>
-                      </span>
-
-                    </div>
+                    <span class="pct">${percent}%</span>
 
                   </div>
-                `;
+
+                  <div class="nums">
+
+                    <span>
+                      Terkumpul:
+                      <b class="rp">
+                        ${rupiah(target.terkumpul)}
+                      </b>
+                    </span>
+
+                    <span>
+                      Target:
+                      <b class="rp">
+                        ${rupiah(target.jumlahTarget)}
+                      </b>
+                    </span>
+
+                  </div>
+
+                </div>
+              `;
             })
             .join("")
     }
@@ -3865,6 +3901,47 @@ function pageTarget() {
 
 function calendarYears() {
   return [2026, 2027, 2028];
+}
+
+const BULAN_SINGKAT = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "Mei",
+  "Jun",
+  "Jul",
+  "Agu",
+  "Sep",
+  "Okt",
+  "Nov",
+  "Des",
+];
+
+// Satu sel matriks kalender. Status dibaca lewat bentuk (terisi + centang),
+// kata tersembunyi untuk pembaca layar, dan title untuk kursor.
+function selKalender(kelas, bayar, mendatang, sekarang, judul) {
+  const kata = bayar
+    ? "Sudah bayar"
+    : mendatang
+      ? "Belum waktunya"
+      : "Belum bayar";
+
+  return `<td class="mx-cell ${kelas} ${bayar ? "paid" : ""} ${mendatang ? "future" : ""} ${sekarang ? "hari-ini" : ""}" title="${esc(judul)}"><i></i><span class="sr-only">${kata}</span></td>`;
+}
+
+function legendaKalender() {
+  return `
+    <div class="calendar-legend">
+
+      <span><i class="k-lunas"></i>Sudah bayar</span>
+
+      <span><i></i>Belum bayar</span>
+
+      <span><i class="k-future"></i>Belum waktunya</span>
+
+    </div>
+  `;
 }
 
 function pageKalender() {
@@ -3884,6 +3961,35 @@ function pageKalender() {
     month: "long",
     year: "numeric",
   });
+
+  const hariIni = todayStr();
+
+  const pilihTahun = (label) => `
+    <div class="field">
+
+      <label>
+        ${label}
+      </label>
+
+      <select data-act-change="setKalenderTahun">
+
+        ${years
+          .map(
+            (y) => `
+              <option
+                value="${y}"
+                ${y === year ? "selected" : ""}
+              >
+                Tahun ${y}
+              </option>
+            `,
+          )
+          .join("")}
+
+      </select>
+
+    </div>
+  `;
 
   /* =======================================
      ACARA
@@ -3912,7 +4018,7 @@ function pageKalender() {
         <div class="empty">
 
           <div class="big">
-            🗓️
+            ${icon("kalender")}
           </div>
 
           Pos ini tidak memiliki
@@ -3931,109 +4037,56 @@ function pageKalender() {
   if (nom.frekuensi === "Harian") {
     const jumlahHari = new Date(year, month, 0).getDate();
 
-    const tanggalList = Array.from(
+    const hariList = Array.from(
       {
         length: jumlahHari,
       },
-      (_, index) => {
-        const tanggal = `${year}-${String(month).padStart(2, "0")}-${String(
+      (_, index) => ({
+        nomor: index + 1,
+
+        tanggal: `${year}-${String(month).padStart(2, "0")}-${String(
           index + 1,
-        ).padStart(2, "0")}`;
-
-        return {
-          nomor: index + 1,
-
-          tanggal,
-        };
-      },
+        ).padStart(2, "0")}`,
+      }),
     );
 
-    const rows = SISWA_MASTER.map((name) => {
-      const paidCount = tanggalList.filter((item) =>
+    const kepala = hariList
+      .map(
+        (h) =>
+          `<th scope="col" class="${h.tanggal === hariIni ? "hari-ini" : ""}">${h.nomor}</th>`,
+      )
+      .join("");
+
+    const baris = SISWA_MASTER.map((name, idx) => {
+      const bayar = hariList.map((h) =>
         DB.kasMasuk.some((x) =>
-          paymentMatchesDay(x, name, year, month, item.nomor, ui.pos),
+          paymentMatchesDay(x, name, year, month, h.nomor, ui.pos),
         ),
-      ).length;
+      );
 
       return `
-              <div
-                class="
-                  calendar-person
-                "
-              >
+        <tr class="calendar-person">
 
-                <div
-                  class="
-                    calendar-person-head
-                  "
-                >
+          <th scope="row" class="mx-no">${idx + 1}</th>
 
-                  <strong>
-                    ${esc(name)}
-                  </strong>
+          <th scope="row" class="mx-nama" title="${tampilNama(name)}">${tampilNama(name)}</th>
 
-                  <span
-                    class="
-                      badge
-                      ${paidCount > 0 ? "badge-ok" : "badge-warn"}
-                    "
-                  >
-                    ${paidCount}/
-                    ${jumlahHari}
-                    hari
-                  </span>
+          <td class="mx-total">${bayar.filter(Boolean).length}/${jumlahHari}</td>
 
-                </div>
+          ${hariList
+            .map((h, k) =>
+              selKalender(
+                "calendar-day",
+                bayar[k],
+                h.tanggal > hariIni,
+                h.tanggal === hariIni,
+                `${fmtDate(h.tanggal)}: ${bayar[k] ? "sudah bayar" : "belum bayar"}`,
+              ),
+            )
+            .join("")}
 
-                <div
-                  class="
-                    calendar-day-grid
-                  "
-                >
-
-                  ${tanggalList
-                    .map((item) => {
-                      const paid = DB.kasMasuk.some((x) =>
-                        paymentMatchesDay(
-                          x,
-                          name,
-                          year,
-                          month,
-                          item.nomor,
-                          ui.pos,
-                        ),
-                      );
-
-                      return `
-                          <div
-                            class="
-                              calendar-day
-                              ${paid ? "paid" : ""}
-                            "
-                            title="
-                              ${item.tanggal}
-                              —
-                              ${rupiah(1000)}
-                            "
-                          >
-
-                            <span>
-                              ${item.nomor}
-                            </span>
-
-                            <b>
-                              ${paid ? "✓" : "·"}
-                            </b>
-
-                          </div>
-                        `;
-                    })
-                    .join("")}
-
-                </div>
-
-              </div>
-            `;
+        </tr>
+      `;
     }).join("");
 
     return `
@@ -4044,7 +4097,7 @@ function pageKalender() {
         </h1>
 
         <p>
-          ${meta.label} ·
+          ${meta.label},
           <strong>
             ${rupiah(nom.jumlah)}
           </strong>
@@ -4055,106 +4108,46 @@ function pageKalender() {
 
       ${posTabs()}
 
-      <div class="form-card">
+      <div class="cal-bar">
 
-        <div
-          class="
-            form-row
-            cols-2
-          "
-        >
+        ${pilihTahun("Tahun")}
 
-          <div class="field">
+        <div class="field">
 
-            <label>
-              📅 Tahun
-            </label>
+          <label>
+            Bulan
+          </label>
 
-            <select data-act-change="setKalenderTahun">
+          <select data-act-change="setKalenderBulan">
 
-              ${years
-                .map(
-                  (y) => `
-                    <option
-                      value="${y}"
-                      ${y === year ? "selected" : ""}
-                    >
-                      Tahun ${y}
-                    </option>
-                  `,
-                )
-                .join("")}
+            ${Array.from(
+              {
+                length: 12,
+              },
+              (_, index) => {
+                const nama = new Date(2026, index, 1).toLocaleDateString(
+                  "id-ID",
+                  {
+                    month: "long",
+                  },
+                );
 
-            </select>
+                return `
+                  <option
+                    value="${index + 1}"
+                    ${index + 1 === month ? "selected" : ""}
+                  >
+                    ${nama}
+                  </option>
+                `;
+              },
+            ).join("")}
 
-          </div>
-
-          <div class="field">
-
-            <label>
-              🗓️ Bulan
-            </label>
-
-            <select data-act-change="setKalenderBulan">
-
-              ${Array.from(
-                {
-                  length: 12,
-                },
-                (_, index) => {
-                  const nama = new Date(2026, index, 1).toLocaleDateString(
-                    "id-ID",
-                    {
-                      month: "long",
-                    },
-                  );
-
-                  return `
-                    <option
-                      value="${index + 1}"
-                      ${index + 1 === month ? "selected" : ""}
-                    >
-                      ${nama}
-                    </option>
-                  `;
-                },
-              ).join("")}
-
-            </select>
-
-          </div>
+          </select>
 
         </div>
 
-        <div
-          class="locked-note"
-          style="
-            margin-bottom:0
-          "
-        >
-          🐐 Setoran Kurban:
-          <strong>
-            ${rupiah(nom.jumlah)}
-          </strong>
-          per hari.
-        </div>
-
-      </div>
-
-      <div
-        class="
-          calendar-legend
-        "
-      >
-
-        <span>
-          <i></i>
-          Sudah bayar
-        </span>
-
-        <span>
-          · Belum bayar
-        </span>
+        ${legendaKalender()}
 
       </div>
 
@@ -4169,11 +4162,31 @@ function pageKalender() {
       </div>
 
       <div
-        class="
-          calendar-list
-        "
+        class="matrix-wrap calendar-list"
+        role="region"
+        aria-label="Kalender pembayaran ${meta.label} ${monthName}"
+        tabindex="0"
       >
-        ${rows}
+
+        <table class="matrix hari">
+
+          <thead>
+
+            <tr>
+              <th scope="col" class="mx-no">No</th>
+              <th scope="col" class="mx-nama">Nama</th>
+              <th scope="col" class="mx-total">Total</th>
+              ${kepala}
+            </tr>
+
+          </thead>
+
+          <tbody>
+            ${baris}
+          </tbody>
+
+        </table>
+
       </div>
     `;
   }
@@ -4184,84 +4197,44 @@ function pageKalender() {
 
   const weekly = nom.frekuensi === "Mingguan";
 
-  const months = Array.from(
-    {
-      length: 12,
-    },
-    (_, i) => `${year}-${String(i + 1).padStart(2, "0")}`,
-  );
+  const [tahunIni, bulanIni] = hariIni.split("-").map(Number);
 
-  const rows = SISWA_MASTER.map((name) => {
-    const paid = months.filter((monthKeyText, index) =>
+  const kepalaBulan = BULAN_SINGKAT.map(
+    (nama, i) =>
+      `<th scope="col" class="${year === tahunIni && i + 1 === bulanIni ? "hari-ini" : ""}">${nama}</th>`,
+  ).join("");
+
+  const baris = SISWA_MASTER.map((name, idx) => {
+    const bayar = BULAN_SINGKAT.map((_, index) =>
       DB.kasMasuk.some((x) =>
         calendarMonthHasPayment(x, name, year, index + 1, weekly),
       ),
     );
 
     return `
-            <div
-              class="
-                calendar-person
-              "
-            >
+      <tr class="calendar-person">
 
-              <div
-                class="
-                  calendar-person-head
-                "
-              >
+        <th scope="row" class="mx-no">${idx + 1}</th>
 
-                <strong>
-                  ${esc(name)}
-                </strong>
+        <th scope="row" class="mx-nama" title="${tampilNama(name)}">${tampilNama(name)}</th>
 
-                <span
-                  class="
-                    badge
-                    ${paid.length ? "badge-ok" : "badge-warn"}
-                  "
-                >
-                  ${paid.length}
-                  ${weekly ? "minggu" : "/12 bulan"}
-                </span>
+        <td class="mx-total">${bayar.filter(Boolean).length}/12</td>
 
-              </div>
+        ${BULAN_SINGKAT.map((nama, index) =>
+          selKalender(
+            "calendar-period",
+            bayar[index],
+            year > tahunIni || (year === tahunIni && index + 1 > bulanIni),
+            year === tahunIni && index + 1 === bulanIni,
+            `${new Date(year, index, 1).toLocaleDateString("id-ID", {
+              month: "long",
+              year: "numeric",
+            })}: ${bayar[index] ? "sudah bayar" : "belum bayar"}`,
+          ),
+        ).join("")}
 
-              <div
-                class="
-                  calendar-month-grid
-                "
-              >
-
-                ${months
-                  .map((month, index) => {
-                    const isPaid = DB.kasMasuk.some((x) =>
-                      calendarMonthHasPayment(x, name, year, index + 1, weekly),
-                    );
-
-                    return `
-                        <div
-                          class="
-                            calendar-period
-                            ${isPaid ? "paid" : ""}
-                          "
-                        >
-
-                          <span>
-                            ${index + 1}
-                          </span>
-
-                          ${isPaid ? "✓" : "·"}
-
-                        </div>
-                      `;
-                  })
-                  .join("")}
-
-              </div>
-
-            </div>
-          `;
+      </tr>
+    `;
   }).join("");
 
   return `
@@ -4280,58 +4253,40 @@ function pageKalender() {
 
     ${posTabs()}
 
-    <div class="form-card">
+    <div class="cal-bar">
 
-      <div class="field">
+      ${pilihTahun("Pilih tahun")}
 
-        <label>
-          📅 Pilih tahun
-        </label>
-
-        <select data-act-change="setKalenderTahun">
-
-          ${years
-            .map(
-              (y) => `
-                <option
-                  value="${y}"
-                  ${y === year ? "selected" : ""}
-                >
-                  Tahun ${y}
-                </option>
-              `,
-            )
-            .join("")}
-
-        </select>
-
-      </div>
+      ${legendaKalender()}
 
     </div>
 
     <div
-      class="
-        calendar-legend
-      "
+      class="matrix-wrap calendar-list"
+      role="region"
+      aria-label="Kalender pembayaran ${meta.label} tahun ${year}"
+      tabindex="0"
     >
 
-      <span>
-        <i></i>
-        Sudah bayar
-      </span>
+      <table class="matrix bulan">
 
-      <span>
-        · Belum bayar
-      </span>
+        <thead>
 
-    </div>
+          <tr>
+            <th scope="col" class="mx-no">No</th>
+            <th scope="col" class="mx-nama">Nama</th>
+            <th scope="col" class="mx-total">Total</th>
+            ${kepalaBulan}
+          </tr>
 
-    <div
-      class="
-        calendar-list
-      "
-    >
-      ${rows}
+        </thead>
+
+        <tbody>
+          ${baris}
+        </tbody>
+
+      </table>
+
     </div>
   `;
 }
@@ -4363,47 +4318,25 @@ function pageQris() {
 
     ${posTabs()}
 
-    <div
-      class="
-        card
-        qris-box
-      "
-    >
+    <div class="card qris-box">
 
-      <div
-        class="
-          pos-chip
-          ${ui.pos}
-        "
-      >
+      <div class="pos-chip">
         ${meta.icon}
         ${meta.label}
       </div>
-
-      <br><br>
 
       ${
         q
           ? `
             <img
-              src="${q}"
-              alt="QRIS"
+              src="${esc(q)}"
+              alt="QRIS ${meta.label}"
             >
           `
           : `
-            <div
-              class="
-                qris-placeholder
-              "
-            >
+            <div class="qris-placeholder">
 
-              <div
-                style="
-                  font-size:30px
-                "
-              >
-                📷
-              </div>
+              ${icon("gambar")}
 
               Belum ada QRIS
 
@@ -4418,9 +4351,9 @@ function pageQris() {
         ? `
           <div class="form-card">
 
-            <h3>
+            <h2 class="card-title">
               Kelola QRIS
-            </h3>
+            </h2>
 
             <form
               data-form="qris"
@@ -4488,6 +4421,7 @@ function pageQris() {
 
 function pageKelolaAkun() {
   if (!session || session.role !== "bendahara") return pageDashboard();
+
   const accounts = DB.accounts
     .slice()
     .sort(
@@ -4495,18 +4429,119 @@ function pageKelolaAkun() {
         String(a.role).localeCompare(String(b.role)) ||
         String(a.nama).localeCompare(String(b.nama)),
     );
+
   return `
-    <div class="page-head"><h1>Kelola Akun</h1><p>Fitur ini hanya tersedia untuk bendahara. Lihat akun terdaftar, ubah peran tidak tersedia, dan reset password akun.</p></div>
-    <div class="form-card"><h3>👥 Daftar akun (${accounts.length})</h3>
+    <div class="page-head">
+
+      <h1>Kelola Akun</h1>
+
+      <p>
+        Lihat akun yang sudah terdaftar dan reset password bila ada yang lupa.
+        Halaman ini hanya untuk bendahara.
+      </p>
+
+    </div>
+
+    <div class="form-card">
+
+      <h2 class="card-title">
+        ${icon("akun")}
+        Daftar akun (${accounts.length})
+      </h2>
+
       ${
         accounts.length
-          ? `<div class="table-wrap"><table><thead><tr><th>Nama</th><th>Username</th><th>Peran</th><th>Aksi</th></tr></thead><tbody>
-      ${accounts.map((a) => `<tr><td>${esc(a.nama)}</td><td>${esc(a.username)}</td><td>${a.role === "bendahara" ? esc(a.jabatan || "Bendahara") : "Siswa"}</td><td><div class="form-actions"><button class="btn btn-outline btn-sm" data-act="resetAkun" data-id="${a.id}">Reset password</button>${a.id !== session.id ? `<button class="btn btn-danger btn-sm" data-act="hapusAkun" data-id="${a.id}">Hapus</button>` : `<span class="muted">Akun Anda</span>`}</div></td></tr>`).join("")}
-      </tbody></table></div>`
+          ? `
+            <div class="table-wrap">
+
+              <table class="t-akun">
+
+                <thead>
+
+                  <tr>
+                    <th>Nama</th>
+                    <th>Username</th>
+                    <th>Peran</th>
+                    <th>Aksi</th>
+                  </tr>
+
+                </thead>
+
+                <tbody>
+
+                  ${accounts
+                    .map(
+                      (a) => `
+                        <tr>
+
+                          <td data-label="Nama">${tampilNama(a.nama)}</td>
+
+                          <td data-label="Username">${esc(a.username)}</td>
+
+                          <td data-label="Peran">${a.role === "bendahara" ? esc(a.jabatan || "Bendahara") : "Siswa"}</td>
+
+                          <td data-label="Aksi">
+
+                            <div class="form-actions">
+
+                              <button
+                                class="btn btn-outline btn-sm"
+                                data-act="resetAkun"
+                                data-id="${a.id}"
+                                aria-label="Reset password ${tampilNama(a.nama)}"
+                              >
+                                Reset password
+                              </button>
+
+                              ${
+                                a.id !== session.id
+                                  ? `
+                                    <button
+                                      class="btn btn-danger btn-sm"
+                                      data-act="hapusAkun"
+                                      data-id="${a.id}"
+                                      aria-label="Hapus akun ${tampilNama(a.nama)}"
+                                    >
+                                      Hapus
+                                    </button>
+                                  `
+                                  : `<span class="muted">Akun Anda</span>`
+                              }
+
+                            </div>
+
+                          </td>
+
+                        </tr>
+                      `,
+                    )
+                    .join("")}
+
+                </tbody>
+
+              </table>
+
+            </div>
+          `
           : `<div class="empty">Belum ada akun terdaftar.</div>`
       }
+
     </div>
-    <div class="form-card"><h3>ℹ️ Informasi</h3><p class="muted">Reset password akan mengatur password akun menjadi <strong>reset</strong>. Sarankan pemilik akun segera menggantinya di Pengaturan.</p></div>
+
+    <div class="form-card">
+
+      <h2 class="card-title">
+        ${icon("info")}
+        Informasi
+      </h2>
+
+      <p class="muted">
+        Reset password akan mengatur password akun menjadi
+        <strong>reset</strong>. Minta pemilik akun segera menggantinya di
+        Pengaturan.
+      </p>
+
+    </div>
   `;
 }
 
@@ -4547,9 +4582,9 @@ function pagePengaturan() {
       "
     >
 
-      <h3>
+      <h2 class="card-title">
         Ganti username
-      </h3>
+      </h2>
 
       <div class="form-card">
 
@@ -4567,7 +4602,9 @@ function pagePengaturan() {
             <div class="field">
 
               <label>
- 
+                Username saat ini
+              </label>
+
               <input
                 value="${esc(currentUsername)}"
                 disabled
@@ -4631,9 +4668,9 @@ function pagePengaturan() {
       "
     >
 
-      <h3>
+      <h2 class="card-title">
         Ganti password
-      </h3>
+      </h2>
 
       <div class="form-card">
 
@@ -4719,34 +4756,24 @@ function pagePengaturan() {
             "
           >
 
-            <h3>
+            <h2 class="card-title">
               Nominal
               ${posMeta(myPos()).label}
-            </h3>
+            </h2>
 
             ${
               myPos() === "Acara"
                 ? `
-                  <div
-                    class="
-                      locked-note
-                    "
-                  >
-                    🎉 Nominal dana acara
-                    diisi manual setiap transaksi.
+                  <div class="locked-note">
+                    ${icon("info")}
+                    <span>Nominal dana acara diisi manual setiap transaksi.</span>
                   </div>
                 `
                 : myPos() === "Kurban"
                   ? `
-                    <div
-                      class="
-                        locked-note
-                      "
-                    >
-                      🐐 Nominal Kurban:
-                      <strong>
-                        Rp 1.000 / hari
-                      </strong>
+                    <div class="locked-note">
+                      ${icon("info")}
+                      <span>Nominal Kurban: <strong>Rp 1.000 per hari</strong></span>
                     </div>
                   `
                   : `
@@ -4843,6 +4870,168 @@ function afterRender() {
   app
     .querySelectorAll("form[data-form]")
     .forEach((form) => form.addEventListener("submit", onSubmit));
+
+  hubungkanLabel();
+
+  pasangTooltipPapan();
+
+  gulirKeKolomIni();
+
+  fokusKolomAuth();
+
+  // animasi petak hanya dimainkan sekali, saat dashboard dibuka
+  ui.papanAnim = false;
+}
+
+// Setelah masuk/daftar gagal, arahkan fokus ke kolom yang perlu dibetulkan
+// (pesan galatnya sudah dibacakan lewat role="alert").
+function fokusKolomAuth() {
+  if (!ui.fokusAuth) {
+    return;
+  }
+
+  const kolom = document.querySelector(
+    '#app .auth-card form [name="' + ui.fokusAuth + '"]',
+  );
+
+  ui.fokusAuth = null;
+
+  if (kolom) {
+    // hubungkan kolom dengan pesan galat agar pembaca layar ikut membacakannya
+    kolom.setAttribute("aria-invalid", "true");
+
+    kolom.setAttribute("aria-describedby", "auth-pesan");
+
+    kolom.focus();
+  }
+}
+
+// Kalender: geser matriks supaya hari/bulan ini langsung terlihat di HP
+// (dua kolom pertama menempel, sisanya bisa digeser).
+function gulirKeKolomIni() {
+  document.querySelectorAll("#app .matrix-wrap").forEach((wrap) => {
+    const kolom = wrap.querySelector("thead th.hari-ini");
+
+    if (!kolom || wrap.scrollWidth <= wrap.clientWidth) {
+      return;
+    }
+
+    const tetap = [".mx-no", ".mx-nama"].reduce((jumlah, selektor) => {
+      const sel = wrap.querySelector(`thead ${selektor}`);
+
+      return jumlah + (sel ? sel.offsetWidth : 0);
+    }, 0);
+
+    const ruang = wrap.clientWidth - tetap;
+
+    wrap.scrollLeft = Math.max(
+      0,
+      kolom.offsetLeft - tetap - (ruang - kolom.offsetWidth) / 2,
+    );
+  });
+}
+
+// Hubungkan setiap <label> dengan isiannya (for/id) supaya mengetuk label
+// memfokuskan isian dan pembaca layar membacakan namanya.
+let hitungIsian = 0;
+
+function hubungkanLabel() {
+  document.querySelectorAll("#app .field").forEach((kotak) => {
+    const label = kotak.querySelector("label");
+
+    const isian = kotak.querySelector(
+      "input:not([type=hidden]), select, textarea",
+    );
+
+    if (!label || !isian || label.htmlFor) {
+      return;
+    }
+
+    if (!isian.id) {
+      hitungIsian += 1;
+
+      isian.id = "fld-" + hitungIsian;
+    }
+
+    label.htmlFor = isian.id;
+  });
+}
+
+// Satu tooltip untuk seluruh papan absen: muncul saat kursor mouse berada di
+// atas petak atau saat petak difokus lewat papan ketik. Isinya dipasang dengan
+// textContent (nama berasal dari data, bukan HTML).
+function pasangTooltipPapan() {
+  const papan = document.querySelector("#app .papan");
+
+  const tip = papan && papan.querySelector(".tip");
+
+  if (!papan || !tip) {
+    return;
+  }
+
+  const tampil = (tile) => {
+    const nama = document.createElement("b");
+
+    nama.textContent = `No. ${tile.dataset.no}, ${titleCase(tile.dataset.nama)}`;
+
+    const status = document.createElement("span");
+
+    status.textContent = tile.dataset.status;
+
+    tip.textContent = "";
+
+    tip.append(nama, status);
+
+    tip.hidden = false;
+
+    const kotak = papan.getBoundingClientRect();
+
+    const petak = tile.getBoundingClientRect();
+
+    let kiri = petak.left - kotak.left + petak.width / 2 - tip.offsetWidth / 2;
+
+    kiri = Math.max(8, Math.min(kiri, kotak.width - tip.offsetWidth - 8));
+
+    let atas = petak.top - kotak.top - tip.offsetHeight - 8;
+
+    if (atas < 4) {
+      atas = petak.bottom - kotak.top + 8;
+    }
+
+    tip.style.left = kiri + "px";
+
+    tip.style.top = atas + "px";
+  };
+
+  const sembunyi = () => {
+    tip.hidden = true;
+  };
+
+  papan.querySelectorAll(".tile").forEach((tile) => {
+    tile.addEventListener("pointerenter", (e) => {
+      if (e.pointerType === "mouse") {
+        tampil(tile);
+      }
+    });
+
+    tile.addEventListener("pointerleave", sembunyi);
+
+    tile.addEventListener("focus", () => {
+      let keyboard = true;
+
+      try {
+        keyboard = tile.matches(":focus-visible");
+      } catch (err) {
+        keyboard = true;
+      }
+
+      if (keyboard) {
+        tampil(tile);
+      }
+    });
+
+    tile.addEventListener("blur", sembunyi);
+  });
 }
 
 function onActionChange(e) {
@@ -4891,6 +5080,15 @@ function onAction(e) {
 
     render();
 
+    // menu terbuka: fokus masuk ke menu; tertutup: kembali ke tombol menu
+    const tujuan = ui.mobileMenuOpen
+      ? document.querySelector(".mobile-menu .mobile-menu-close")
+      : document.querySelector(".mobile-menu-btn");
+
+    if (tujuan) {
+      tujuan.focus();
+    }
+
     return;
   }
 
@@ -4899,6 +5097,12 @@ function onAction(e) {
 
     render();
 
+    const tombolMenu = document.querySelector(".mobile-menu-btn");
+
+    if (tombolMenu && tombolMenu.offsetParent !== null) {
+      tombolMenu.focus();
+    }
+
     return;
   }
 
@@ -4906,6 +5110,8 @@ function onAction(e) {
 
   if (act === "loginTab") {
     ui.loginTab = el.dataset.val;
+
+    ui.authDraft = null;
 
     ui.msg = null;
 
@@ -4917,6 +5123,8 @@ function onAction(e) {
   if (act === "regRole") {
     ui.regRole = el.dataset.val;
 
+    ui.authDraft = null;
+
     ui.msg = null;
 
     render();
@@ -4924,8 +5132,19 @@ function onAction(e) {
     return;
   }
 
+  if (act === "goForgot") {
+    ui.authView = "forgot";
+    ui.authDraft = { role: ui.loginTab || "siswa" };
+    ui.msg = null;
+    ui.fokusAuth = null;
+    render();
+    return;
+  }
+
   if (act === "goRegister") {
     ui.authView = "register";
+
+    ui.authDraft = null;
 
     ui.msg = null;
 
@@ -4936,6 +5155,8 @@ function onAction(e) {
 
   if (act === "goLogin") {
     ui.authView = "login";
+    ui.authDraft = null;
+    ui.forgotStep = 1;
 
     ui.msg = null;
 
@@ -4954,11 +5175,56 @@ function onAction(e) {
       return;
     ui.view = el.dataset.view;
 
+    ui.papanAnim = ui.view === "dashboard";
+
     ui.mobileMenuOpen = false;
 
     ui.notifOpen = false;
 
     ui.notifBaruIds = [];
+
+    render();
+
+    window.scrollTo(0, 0);
+
+    return;
+  }
+
+  // Pintasan dari dashboard siswa: buka halaman lain pada pos tertentu.
+  if (act === "goPos") {
+    ui.pos = el.dataset.val || "Rutin";
+
+    ui.view = el.dataset.view || "dashboard";
+
+    ui.editKasId = null;
+
+    ui.mobileMenuOpen = false;
+
+    ui.notifOpen = false;
+
+    ui.notifBaruIds = [];
+
+    render();
+
+    window.scrollTo(0, 0);
+
+    return;
+  }
+
+  // Papan absen: pilih / lepas petak siswa.
+  if (act === "pilihSiswa") {
+    const nama = el.dataset.nama;
+
+    ui.siswaPilih = ui.siswaPilih === nama ? null : nama;
+
+    render();
+
+    return;
+  }
+
+  // Filter daftar status: semua / belum bayar / lunas.
+  if (act === "filterStatus") {
+    ui.filterStatus = el.dataset.val || "semua";
 
     render();
 
@@ -5229,7 +5495,11 @@ function onAction(e) {
   if (act === "confirmYes") {
     const callback = ui.confirmDialog && ui.confirmDialog.onYes;
 
+    const balik = ui.fokusSebelumDialog;
+
     ui.confirmDialog = null;
+
+    ui.fokusSebelumDialog = null;
 
     closeDialog();
 
@@ -5237,13 +5507,13 @@ function onAction(e) {
       callback();
     }
 
+    pulihkanFokus(balik);
+
     return;
   }
 
   if (act === "confirmNo") {
-    ui.confirmDialog = null;
-
-    closeDialog();
+    batalDialog();
 
     return;
   }
@@ -5267,6 +5537,17 @@ function onSubmit(e) {
   if (type === "login") {
     doLogin(val("role"), val("username"), val("password"));
 
+    return;
+  }
+
+  if (type === "forgotPassword") {
+    doResetPassword(
+      val("role"),
+      val("username"),
+      val("nama"),
+      val("password"),
+      val("password2"),
+    );
     return;
   }
 
@@ -5340,15 +5621,25 @@ function findAccount(username) {
   );
 }
 
+// Tampilkan galat masuk/daftar tanpa menghapus apa yang sudah diketik
+// (kecuali password) dan arahkan fokus ke kolom yang perlu dibetulkan.
+function galatAuth(teks, draft, fokus) {
+  ui.msg = {
+    type: "error",
+
+    text: teks,
+  };
+
+  ui.authDraft = draft;
+
+  ui.fokusAuth = fokus;
+
+  render();
+}
+
 function doLogin(role, username, password) {
   if (!username || !password) {
-    ui.msg = {
-      type: "error",
-
-      text: "Lengkapi username dan password.",
-    };
-
-    render();
+    galatAuth("Lengkapi username dan password.", { username }, "username");
 
     return;
   }
@@ -5356,25 +5647,13 @@ function doLogin(role, username, password) {
   const account = findAccount(username);
 
   if (!account || account.role !== role) {
-    ui.msg = {
-      type: "error",
-
-      text: "Akun tidak ditemukan.",
-    };
-
-    render();
+    galatAuth("Akun tidak ditemukan.", { username }, "username");
 
     return;
   }
 
   if (account.passHash !== hashPass(password)) {
-    ui.msg = {
-      type: "error",
-
-      text: "Password salah.",
-    };
-
-    render();
+    galatAuth("Password salah.", { username }, "password");
 
     return;
   }
@@ -5403,6 +5682,16 @@ function doLogin(role, username, password) {
 
   ui.notifBaruIds = [];
 
+  ui.siswaPilih = null;
+
+  ui.filterStatus = "semua";
+
+  ui.papanAnim = true;
+
+  ui.authDraft = null;
+
+  ui.fokusAuth = null;
+
   ui.msg = null;
 
   render();
@@ -5410,6 +5699,8 @@ function doLogin(role, username, password) {
 
 function doLogout() {
   clearSession();
+
+  ui.authDraft = null;
 
   ui.authView = "login";
 
@@ -5426,75 +5717,109 @@ function doLogout() {
   render();
 }
 
+function doResetPassword(role, username, nama, password, password2) {
+  if (!username || !nama) {
+    galatAuth(
+      "Username dan nama wajib diisi.",
+      { role, username, nama },
+      !username ? "username" : "nama",
+    );
+    return;
+  }
+
+  if (password.length < 4) {
+    galatAuth(
+      "Password baru minimal 4 karakter.",
+      { role, username, nama },
+      "password",
+    );
+    return;
+  }
+
+  if (password !== password2) {
+    galatAuth(
+      "Konfirmasi password baru tidak sama.",
+      { role, username, nama },
+      "password2",
+    );
+    return;
+  }
+
+  const account = findAccount(username);
+
+  if (
+    !account ||
+    account.role !== role ||
+    String(account.nama || "")
+      .trim()
+      .toLowerCase() !==
+      String(nama || "")
+        .trim()
+        .toLowerCase()
+  ) {
+    galatAuth(
+      "Data akun tidak cocok. Periksa peran, username, dan nama.",
+      { role, username, nama },
+      "username",
+    );
+    return;
+  }
+
+  account.passHash = hashPass(password);
+  saveDB();
+
+  ui.authView = "login";
+  ui.loginTab = role;
+  ui.authDraft = { username };
+  ui.fokusAuth = "username";
+  ui.msg = {
+    type: "ok",
+    text: "Password berhasil diubah. Silakan masuk dengan password baru.",
+  };
+  render();
+}
+
 function doRegister(role, nama, username, password, password2) {
   if (!nama) {
-    ui.msg = {
-      type: "error",
-
-      text: "Pilih nama.",
-    };
-
-    render();
+    galatAuth("Pilih nama.", { nama, username }, "nama");
 
     return;
   }
 
   if (!username || /\s/.test(username)) {
-    ui.msg = {
-      type: "error",
-
-      text: "Username tidak boleh mengandung spasi.",
-    };
-
-    render();
+    galatAuth(
+      "Username tidak boleh mengandung spasi.",
+      { nama, username },
+      "username",
+    );
 
     return;
   }
 
   if (findAccount(username)) {
-    ui.msg = {
-      type: "error",
-
-      text: "Username sudah dipakai.",
-    };
-
-    render();
+    galatAuth("Username sudah dipakai.", { nama, username }, "username");
 
     return;
   }
 
   if (password.length < 4) {
-    ui.msg = {
-      type: "error",
-
-      text: "Password minimal 4 karakter.",
-    };
-
-    render();
+    galatAuth("Password minimal 4 karakter.", { nama, username }, "password");
 
     return;
   }
 
   if (password !== password2) {
-    ui.msg = {
-      type: "error",
-
-      text: "Konfirmasi password tidak sama.",
-    };
-
-    render();
+    galatAuth(
+      "Konfirmasi password tidak sama.",
+      { nama, username },
+      "password2",
+    );
 
     return;
   }
 
   if (!availableNames(role).includes(nama)) {
-    ui.msg = {
-      type: "error",
-
-      text: "Nama sudah terdaftar.",
-    };
-
-    render();
+    galatAuth("Nama sudah terdaftar.", { nama, username }, "nama");
 
     return;
   }
@@ -5525,6 +5850,10 @@ function doRegister(role, nama, username, password, password2) {
   ui.authView = "login";
 
   ui.loginTab = role;
+
+  ui.authDraft = null;
+
+  ui.fokusAuth = null;
 
   ui.msg = {
     type: "ok",
@@ -5894,15 +6223,29 @@ function doSaveQris(file) {
   const reader = new FileReader();
 
   reader.onload = function () {
+    const sebelumnya = DB.settings.qris[ui.pos];
+
     DB.settings.qris[ui.pos] = reader.result;
 
-    saveDB();
+    try {
+      saveDB();
+    } catch (err) {
+      // penyimpanan peramban penuh: kembalikan QRIS lama dan beri tahu
+      DB.settings.qris[ui.pos] = sebelumnya;
+
+      alert(PESAN_GAMBAR_BESAR);
+
+      return;
+    }
 
     render();
   };
 
   reader.readAsDataURL(file);
 }
+
+const PESAN_GAMBAR_BESAR =
+  "Gambar terlalu besar untuk disimpan di perangkat ini. Pilih gambar yang lebih kecil.";
 
 /* ============================================================
    BUKTI TRANSFER
@@ -5934,7 +6277,7 @@ function doSaveBukti(val, file) {
   const reader = new FileReader();
 
   reader.onload = function () {
-    DB.bukti.push({
+    const item = {
       id: uid(),
 
       pos: ui.pos,
@@ -5952,11 +6295,24 @@ function doSaveBukti(val, file) {
       status: "pending",
 
       createdAt: Date.now(),
-    });
+    };
 
-    saveDB();
+    DB.bukti.push(item);
+
+    try {
+      saveDB();
+    } catch (err) {
+      // penyimpanan peramban penuh: batalkan, jangan pura-pura terkirim
+      DB.bukti = DB.bukti.filter((x) => x !== item);
+
+      alert(PESAN_GAMBAR_BESAR);
+
+      return;
+    }
 
     render();
+
+    showToast("Bukti terkirim. Bendahara akan memeriksanya.");
   };
 
   reader.readAsDataURL(file);
@@ -5966,7 +6322,21 @@ function doSaveBukti(val, file) {
    DIALOG
 ============================================================ */
 
+function batalDialog() {
+  const balik = ui.fokusSebelumDialog;
+
+  ui.confirmDialog = null;
+
+  ui.fokusSebelumDialog = null;
+
+  closeDialog();
+
+  pulihkanFokus(balik);
+}
+
 function confirmAction(title, text, callback, opts) {
+  ui.fokusSebelumDialog = kunciFokus(document.activeElement);
+
   ui.confirmDialog = {
     title,
 
@@ -6000,13 +6370,17 @@ function renderConfirmDialog() {
         class="
           dialog
         "
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="dlgJudul"
+        aria-describedby="dlgIsi"
       >
 
-        <h3>
+        <h3 id="dlgJudul">
           ${esc(ui.confirmDialog.title)}
         </h3>
 
-        <p>
+        <p id="dlgIsi">
           ${esc(ui.confirmDialog.text)}
         </p>
 
@@ -6045,6 +6419,35 @@ function renderConfirmDialog() {
   wrap
     .querySelectorAll("[data-act]")
     .forEach((el) => el.addEventListener("click", onAction));
+
+  // fokus mulai di pilihan paling aman (Batal) dan tidak keluar dari dialog
+  const batal = wrap.querySelector('[data-act="confirmNo"]');
+
+  if (batal) {
+    batal.focus();
+  }
+
+  wrap.addEventListener("keydown", (e) => {
+    if (e.key !== "Tab") {
+      return;
+    }
+
+    const tombol = wrap.querySelectorAll("button");
+
+    const pertama = tombol[0];
+
+    const terakhir = tombol[tombol.length - 1];
+
+    if (e.shiftKey && document.activeElement === pertama) {
+      e.preventDefault();
+
+      terakhir.focus();
+    } else if (!e.shiftKey && document.activeElement === terakhir) {
+      e.preventDefault();
+
+      pertama.focus();
+    }
+  });
 }
 
 function closeDialog() {
@@ -6113,13 +6516,30 @@ function cekPergantianPeriode() {
 
     if (berganti) {
       showToast(
-        `📅 Periode baru: ${periodeAktif(pos).nama}. Status pembayaran direset.`,
+        `Periode baru: ${periodeAktif(pos).nama}. Status pembayaran direset.`,
       );
     }
   }
 }
 
 setInterval(cekPergantianPeriode, 30 * 1000);
+
+// Tombol Esc menutup lapisan paling atas: dialog, panel notifikasi, lalu menu HP.
+document.addEventListener("keydown", (e) => {
+  if (e.key !== "Escape") {
+    return;
+  }
+
+  if (ui.confirmDialog) {
+    batalDialog();
+  } else if (ui.notifOpen) {
+    tutupNotif();
+  } else if (ui.mobileMenuOpen) {
+    ui.mobileMenuOpen = false;
+
+    render();
+  }
+});
 
 document.addEventListener("visibilitychange", () => {
   if (!document.hidden) {
