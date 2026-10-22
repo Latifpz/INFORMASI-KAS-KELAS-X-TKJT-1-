@@ -1,14 +1,6 @@
 /* =====================================================================
    KAS TKJT 1 - gaya "buku kas"
-   Urutan berkas (digabung oleh build_css.sh):
-     00 token + tema      05 dasar + tipografi   10 komponen umum
-     20 auth              30 shell + notifikasi  40 dashboard + papan absen
-     50 halaman           60 kalender            90 cetak + aksesibilitas
-   Terang = "kertas", gelap = "papan tulis". Satu warna = satu arti:
-     hijau   = utama dan lunas
-     kuning  = belum bayar / menunggu
-     merah   = hapus dan galat saja
-   Pos (Rutin/Acara/Kurban) dibedakan oleh ikon dan label, bukan warna.
+ 
 ===================================================================== */
 
 :root {
