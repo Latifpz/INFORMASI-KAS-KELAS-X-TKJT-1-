@@ -1,4 +1,4 @@
-const SUPABASE_URL = "ISI_PROJECT_URL_KAMU";
+const SUPABASE_URL = "https://nfcanvjnxixlhzdvnstl.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_-KR9D_QAELFGAlCgbxXe0w_PnKIfvqf";
 
 const { createClient } = supabase;
