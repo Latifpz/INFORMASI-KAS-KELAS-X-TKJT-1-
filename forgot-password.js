@@ -1,5 +1,5 @@
 const SUPABASE_URL = "https://nfcavjnxixlhzdvnstl.supabase.co";
-const SUPABASE_ANON_KEY = "ISI_ANON_KEY_KAMU_DI_SINI";
+const SUPABASE_ANON_KEY = "sb_publishable_-KR9D_QAELFGAlCgbxXe0w_PnKIfvqf";
 
 const { createClient } = supabase;
 
