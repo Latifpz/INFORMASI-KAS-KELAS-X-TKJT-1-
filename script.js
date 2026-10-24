@@ -203,6 +203,17 @@ function supabaseSiap() {
   return Boolean(supabaseClient);
 }
 
+// Supabase Auth requires an email identifier internally. This application uses
+// a random non-deliverable alias, while users only see and enter their username.
+// Keep the alias in public.users.email and resolve it through lookup_login_email().
+const INTERNAL_AUTH_DOMAIN = "login.kas-tkjt.invalid";
+function emailInternalAuth() {
+  const token = window.crypto && typeof window.crypto.randomUUID === "function"
+    ? window.crypto.randomUUID().replace(/-/g, "")
+    : `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 14)}`;
+  return `account-${token.toLowerCase()}@${INTERNAL_AUTH_DOMAIN}`;
+}
+
 function bersihkanUrlRecovery() {
   const url = new URL(window.location.href);
   url.searchParams.delete("reset");
@@ -1504,7 +1515,7 @@ function renderLogin() {
           </h1>
 
           <p class="auth-sub">
-            Pilih peranmu lalu masuk dengan email dan password akun Supabase.
+            Pilih peranmu lalu masuk menggunakan username dan password.
           </p>
 
           <div
@@ -1552,20 +1563,16 @@ function renderLogin() {
 
             <div class="field">
 
-              <label for="login-email">
-                Email
-              </label>
-
+              <label for="login-username">Username</label>
               <input
-                id="login-email"
-                name="email"
-                type="email"
-                value="${esc(draf.email || "")}"
-                autocomplete="email"
-                inputmode="email"
+                id="login-username"
+                name="username"
+                type="text"
+                value="${esc(draf.username || "")}" 
+                autocomplete="username"
                 autocapitalize="none"
                 spellcheck="false"
-                placeholder="nama@email.com"
+                placeholder="Masukkan username"
                 required
               >
 
@@ -1633,7 +1640,6 @@ function availableNames(role) {
 }
 
 function renderForgotPassword() {
-  const draf = ui.authDraft || {};
   return `
     <div class="center-screen">
       <div class="auth-wrap">
@@ -1647,15 +1653,15 @@ function renderForgotPassword() {
             </div>
           </div>
           <h1 class="auth-title">Lupa password?</h1>
-          <p class="auth-sub">Masukkan email akunmu. Supabase akan mengirim link untuk membuat password baru.</p>
+          <p class="auth-sub">
+            Akun menggunakan username tanpa email. Untuk menjaga keamanan, reset password harus dibantu administrator.
+            Administrator dapat menghapus akun lama dari Supabase Authentication, lalu pengguna membuat akun baru dengan username yang sama.
+          </p>
           ${pesanAuth()}
-          <form data-form="forgotPassword">
-            <div class="field">
-              <label for="forgot-email">Email akun</label>
-              <input id="forgot-email" name="email" type="email" value="${esc(draf.email || "")}" autocomplete="email" inputmode="email" placeholder="nama@email.com" required>
-            </div>
-            <button class="btn btn-primary" type="submit">Kirim link reset password</button>
-          </form>
+          <div class="locked-note">
+            ${icon("info")}
+            <span>Jangan membagikan password kepada siapa pun. Jika masih bisa login, ubah password melalui menu Pengaturan.</span>
+          </div>
           <div class="switch-link">
             <button type="button" data-act="goLogin">Kembali ke login</button>
           </div>
@@ -1720,8 +1726,8 @@ function renderRegister() {
           <h1 class="auth-title">Buat akun sendiri</h1>
           <p class="auth-sub">
             ${daftarBendahara
-              ? "Pilih nama dan jabatan bendahara yang sesuai. Setelah pendaftaran, administrator harus mengaktifkan akses bendahara berdasarkan email akun."
-              : "Pilih nama sesuai data kelas, buat username, gunakan email yang aktif, lalu tentukan password."}
+              ? "Pilih nama bendahara, buat username dan password. Akses bendahara akan diaktifkan oleh administrator setelah akun dibuat."
+              : "Pilih nama sesuai data kelas, lalu buat username dan password."}
           </p>
 
           <div class="tabs" data-active="${role}" role="group" aria-label="Peran">
@@ -1769,12 +1775,7 @@ function renderRegister() {
               <input id="reg-username" name="username" value="${esc(draf.username || "")}" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="Bebas, tanpa spasi" required>
             </div>
 
-            <div class="field">
-              <label for="reg-email">Email aktif</label>
-              <input id="reg-email" name="email" type="email" value="${esc(draf.email || "")}" autocomplete="email" inputmode="email" autocapitalize="none" spellcheck="false" placeholder="nama@email.com" required>
-            </div>
-
-            <div class="field">
+<div class="field">
               <label for="reg-password">Buat password</label>
               <input id="reg-password" name="password" type="password" autocomplete="new-password" minlength="6" required>
             </div>
@@ -4461,7 +4462,7 @@ function pageKelolaAkun() {
                                 data-id="${a.id}"
                                 aria-label="Reset password ${tampilNama(a.nama)}"
                               >
-                                Reset password
+                                Panduan reset
                               </button>
 
                               ${
@@ -4509,8 +4510,7 @@ function pageKelolaAkun() {
       </h2>
 
       <p class="muted">
-        Tombol reset mengirim link pemulihan melalui Supabase Auth ke email pemilik akun.
-        Password tidak pernah ditampilkan atau disimpan oleh aplikasi ini.
+        Aplikasi ini memakai username tanpa email. Reset password tidak mengirim email; jika pengguna lupa password, administrator perlu menghapus akun tersebut di Supabase Authentication lalu pengguna mendaftar ulang. Untuk mengaktifkan bendahara kembali, jalankan SQL aktivasi berdasarkan username.
       </p>
 
     </div>
@@ -5107,7 +5107,7 @@ function onAction(e) {
   if (act === "goForgot") {
     ui.authResetMode = false;
     ui.authView = "forgot";
-    ui.authDraft = { email: "" };
+    ui.authDraft = null;
     ui.msg = null;
     ui.fokusAuth = null;
     render();
@@ -5362,26 +5362,7 @@ function onAction(e) {
   /* KELOLA AKUN - khusus bendahara */
   if (act === "resetAkun") {
     if (session.role !== "bendahara") return;
-    confirmAction(
-      "Kirim link reset password?",
-      "Link pemulihan akan dikirim ke email pemilik akun.",
-      async () => {
-        const account = DB.accounts.find((a) => String(a.id) === String(id));
-        if (!account?.email || !supabaseSiap()) {
-          showToast("Email akun tidak tersedia.");
-          return;
-        }
-        const { error } = await supabaseClient.auth.resetPasswordForEmail(account.email, {
-          redirectTo: `${window.location.origin}/?reset=1`,
-        });
-        if (error) {
-          showToast("Gagal mengirim link reset: " + error.message);
-          return;
-        }
-        showToast("Link reset password dikirim ke " + account.email);
-      },
-      { yesLabel: "Kirim link", yesClass: "btn-teal" },
-    );
+    showToast("Akun memakai username tanpa email. Untuk reset password, administrator harus menghapus akun di Supabase Authentication lalu pengguna mendaftar ulang.");
     return;
   }
   if (act === "hapusAkun") {
@@ -5529,12 +5510,7 @@ function onSubmit(e) {
   const val = (key) => (fd.get(key) || "").toString().trim();
 
   if (type === "login") {
-    void doLogin(val("role"), val("email"), val("password"));
-    return;
-  }
-
-  if (type === "forgotPassword") {
-    void doForgotPassword(val("email"));
+    void doLogin(val("role"), val("username"), val("password"));
     return;
   }
 
@@ -5548,7 +5524,6 @@ function onSubmit(e) {
       val("role"),
       val("nama"),
       val("username"),
-      val("email"),
       val("password"),
       val("password2"),
     );
@@ -5655,30 +5630,59 @@ async function aktivasiPenggunaAuth(user, requestedRole = null) {
   render();
 }
 
-async function doLogin(role, email, password) {
+async function doLogin(role, username, password) {
   if (!supabaseSiap()) {
-    galatAuth("Supabase belum terkonfigurasi. Periksa URL dan publishable key di index.html.", { email }, "email");
+    galatAuth("Supabase belum terkonfigurasi. Periksa URL dan publishable key di index.html.", { username }, "username");
     return;
   }
-  if (!email || !password) {
-    galatAuth("Masukkan email dan password.", { email }, "email");
+  username = String(username || "").trim().toLowerCase();
+  if (!username || !password) {
+    galatAuth("Masukkan username dan password.", { username }, username ? "password" : "username");
+    return;
+  }
+  if (!/^[a-z0-9._-]{3,24}$/.test(username)) {
+    galatAuth("Format username tidak valid.", { username }, "username");
     return;
   }
 
   ui.msg = { type: "ok", text: "Memeriksa akun..." };
-  ui.authDraft = { email };
+  ui.authDraft = { username };
   render();
 
-  const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
-  if (error || !data?.user) {
-    galatAuth(error?.message || "Login gagal. Periksa email dan password.", { email }, "email");
-    return;
-  }
-
   try {
-    await aktivasiPenggunaAuth(data.user, role);
+    // This RPC returns only a synthetic internal Auth alias, never a personal email.
+    const { data: internalEmail, error: lookupError } = await supabaseClient.rpc(
+      "lookup_login_email",
+      { p_username: username },
+    );
+    if (lookupError) throw lookupError;
+    if (!internalEmail) {
+      galatAuth("Username belum terdaftar. Buat akun terlebih dahulu.", { username }, "username");
+      return;
+    }
+
+    const { data, error } = await supabaseClient.auth.signInWithPassword({
+      email: internalEmail,
+      password,
+    });
+    if (error || !data?.user) {
+      const message = String(error?.message || "");
+      if (/email not confirmed/i.test(message)) {
+        galatAuth("Login belum aktif karena konfirmasi email masih diwajibkan. Minta administrator menonaktifkan Confirm email, reset akun lama, lalu daftar ulang.", { username }, "username");
+      } else {
+        galatAuth("Username atau password salah.", { username }, "username");
+      }
+      return;
+    }
+
+    try {
+      await aktivasiPenggunaAuth(data.user, role);
+    } catch (err) {
+      galatAuth(err?.message || "Profil pengguna belum siap. Pastikan akun sudah diaktifkan di database.", { username }, "username");
+    }
   } catch (err) {
-    galatAuth(err?.message || "Profil pengguna tidak dapat dimuat.", { email }, "email");
+    console.error("Login gagal:", err);
+    galatAuth(err?.message || "Login gagal. Periksa pengaturan Supabase.", { username }, "username");
   }
 }
 
@@ -5697,34 +5701,6 @@ async function doLogout() {
   ui.mobileMenuOpen = false;
   ui.notifOpen = false;
   ui.notifBaruIds = [];
-  render();
-}
-
-async function doForgotPassword(email) {
-  if (!supabaseSiap()) {
-    galatAuth("Supabase belum terkonfigurasi. Periksa URL dan publishable key.", { email }, "email");
-    return;
-  }
-  if (!email) {
-    galatAuth("Masukkan email akun terlebih dahulu.", { email }, "email");
-    return;
-  }
-
-  ui.msg = { type: "ok", text: "Mengirim link reset password..." };
-  ui.authDraft = { email };
-  render();
-
-  const redirectTo = `${window.location.origin}/?reset=1`;
-  const { error } = await supabaseClient.auth.resetPasswordForEmail(email, { redirectTo });
-  if (error) {
-    galatAuth(error.message || "Link reset password gagal dikirim.", { email }, "email");
-    return;
-  }
-
-  ui.msg = {
-    type: "ok",
-    text: "Jika email terdaftar, instruksi reset password akan dikirim. Periksa kotak masuk dan folder spam.",
-  };
   render();
 }
 
@@ -5765,101 +5741,98 @@ async function doUpdatePassword(password, password2) {
   render();
 }
 
-async function doRegister(role, nama, username, email, password, password2) {
+async function doRegister(role, nama, username, password, password2) {
   if (!supabaseSiap()) {
-    galatAuth("Supabase belum terkonfigurasi. Periksa URL dan publishable key.", { role, nama, username, email }, "email");
+    galatAuth("Supabase belum terkonfigurasi. Periksa URL dan publishable key.", { role, nama, username }, "username");
     return;
   }
 
+  username = String(username || "").trim().toLowerCase();
   if (!["siswa", "bendahara"].includes(role)) {
-    galatAuth("Pilih peran yang valid.", { role, nama, username, email }, "nama");
+    galatAuth("Pilih peran yang valid.", { role, nama, username }, "nama");
     return;
   }
 
   const namaValid = role === "bendahara"
     ? BENDAHARA_MASTER.some((b) => normalizedText(b.nama) === normalizedText(nama))
     : SISWA_MASTER.some((s) => normalizedText(s) === normalizedText(nama));
-
   if (!nama || !namaValid) {
-    galatAuth("Pilih nama yang sesuai dengan peran yang dipilih.", { role, nama, username, email }, "nama");
+    galatAuth("Pilih nama yang sesuai dengan peran.", { role, nama, username }, "nama");
     return;
   }
-  if (!username || /\s/.test(username)) {
-    galatAuth("Username tidak boleh kosong atau mengandung spasi.", { role, nama, username, email }, "username");
-    return;
-  }
-  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    galatAuth("Masukkan alamat email yang valid.", { role, nama, username, email }, "email");
+  if (!/^[a-z0-9._-]{3,24}$/.test(username)) {
+    galatAuth("Username 3–24 karakter: huruf, angka, titik, garis bawah, atau tanda hubung; tanpa spasi.", { role, nama, username }, "username");
     return;
   }
   if (password.length < 6) {
-    galatAuth("Password minimal 6 karakter.", { role, nama, username, email }, "password");
+    galatAuth("Password minimal 6 karakter.", { role, nama, username }, "password");
     return;
   }
   if (password !== password2) {
-    galatAuth("Konfirmasi password tidak sama.", { role, nama, username, email }, "password2");
+    galatAuth("Konfirmasi password tidak sama.", { role, nama, username }, "password2");
     return;
   }
 
   ui.msg = { type: "ok", text: "Membuat akun..." };
-  ui.authDraft = { role, nama, username, email };
+  ui.authDraft = { role, nama, username };
   render();
 
+  // Supabase Auth requires an email-shaped identifier internally. It is randomly
+  // generated, cannot receive email, and is never shown to the user.
+  const internalEmail = emailInternalAuth();
   const { data, error } = await supabaseClient.auth.signUp({
-    email,
+    email: internalEmail,
     password,
     options: {
       data: { nama, username },
-      emailRedirectTo: window.location.origin + "/",
     },
   });
 
   if (error) {
-    galatAuth(error.message || "Akun gagal dibuat.", { role, nama, username, email }, "email");
+    const lower = String(error.message || "").toLowerCase();
+    const friendly = /duplicate key|already registered|already exists|username|unique constraint/.test(lower)
+      ? "Nama atau username sudah dipakai akun lain. Pilih nama yang belum terdaftar atau periksa akun lama."
+      : (error.message || "Akun gagal dibuat.");
+    galatAuth(friendly, { role, nama, username }, "username");
     return;
   }
 
-  if (role === "bendahara") {
-    // A profile created by public signup is intentionally NOT granted privileged role.
-    // The project owner promotes it using the provided SQL template and the verified email.
-    if (data?.session) await supabaseClient.auth.signOut();
+  if (!data?.session || !data?.user) {
     ui.authView = "login";
     ui.authResetMode = false;
-    ui.loginTab = "bendahara";
-    ui.authDraft = { email };
-    ui.fokusAuth = "email";
+    ui.loginTab = role;
+    ui.authDraft = { username };
+    ui.fokusAuth = "username";
     ui.msg = {
-      type: "ok",
-      text: data?.session
-        ? "Akun bendahara berhasil dibuat. Minta administrator mengaktifkan jabatan untuk email ini di Supabase sebelum login."
-        : "Akun bendahara dibuat. Verifikasi email jika diminta, lalu minta administrator mengaktifkan jabatan akun di Supabase sebelum login.",
+      type: "error",
+      text: "Supabase masih meminta verifikasi email. Karena aplikasi memakai username saja, administrator harus menonaktifkan Authentication → Sign In / Providers → Email → Confirm email, lalu hapus akun yang baru dibuat dan daftar ulang.",
     };
     render();
     return;
   }
 
-  if (data?.session && data?.user) {
-    try {
-      await aktivasiPenggunaAuth(data.user, "siswa");
-      showToast("Akun berhasil dibuat dan kamu sudah masuk.");
-      return;
-    } catch (err) {
-      await supabaseClient.auth.signOut();
-      galatAuth(err?.message || "Akun dibuat tetapi profil belum siap. Periksa setup Supabase.", { role, email }, "email");
-      return;
-    }
+  if (role === "bendahara") {
+    await supabaseClient.auth.signOut();
+    ui.authView = "login";
+    ui.authResetMode = false;
+    ui.loginTab = "bendahara";
+    ui.authDraft = { username };
+    ui.fokusAuth = "username";
+    ui.msg = {
+      type: "ok",
+      text: "Akun berhasil dibuat. Administrator perlu mengaktifkan jabatan bendahara melalui SQL aktivasi berdasarkan username sebelum akun ini dapat membuka dashboard bendahara.",
+    };
+    render();
+    return;
   }
 
-  ui.authView = "login";
-  ui.authResetMode = false;
-  ui.loginTab = "siswa";
-  ui.authDraft = { email };
-  ui.fokusAuth = "email";
-  ui.msg = {
-    type: "ok",
-    text: "Akun dibuat. Cek email untuk verifikasi, lalu login dengan email dan password.",
-  };
-  render();
+  try {
+    await aktivasiPenggunaAuth(data.user, "siswa");
+    showToast("Akun berhasil dibuat. Dashboard sudah terbuka.");
+  } catch (err) {
+    await supabaseClient.auth.signOut();
+    galatAuth(err?.message || "Akun dibuat, tetapi profil belum siap. Periksa reset-username-login.sql.", { role, nama, username }, "username");
+  }
 }
 
 /* ============================================================
@@ -6105,8 +6078,9 @@ async function doGantiUsername(baru, password) {
     alert("Sesi Supabase tidak ditemukan. Login kembali.");
     return;
   }
-  if (!baru || /\s/.test(baru)) {
-    alert("Username tidak boleh kosong atau mengandung spasi.");
+  baru = String(baru || "").trim().toLowerCase();
+  if (!/^[a-z0-9._-]{3,24}$/.test(baru)) {
+    alert("Username harus 3–24 karakter: huruf, angka, titik, garis bawah, atau tanda hubung.");
     return;
   }
   if (baru === session.username) {
