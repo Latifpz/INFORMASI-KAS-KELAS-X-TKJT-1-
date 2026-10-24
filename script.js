@@ -1417,24 +1417,16 @@ function render() {
 
 // Sisi kiri halaman masuk (layar lebar saja): papan nomor absen sebagai hiasan.
 function authAside() {
-  const petak = SISWA_MASTER.map((_, i) => `<li>${i + 1}</li>`).join("");
-
   return `
-    <aside class="auth-aside" aria-hidden="true">
-
-      <p class="auth-claim">
-        ${SISWA_MASTER.length} siswa, ${BENDAHARA_MASTER.length} bendahara, satu buku kas.
-      </p>
-
-      <ol class="auth-board">${petak}</ol>
-
-      <p class="auth-caption">
-        Kas rutin, dana acara, dan dana kurban kelas X TKJT 1.
-      </p>
-
+    <aside class="auth-aside" aria-label="Foto kelas X TKJT 1">
+      <img
+        class="auth-class-photo"
+        src="login-left.jpg"
+        alt="Foto bersama kelas X TKJT 1"
+      />
     </aside>
   `;
-}
+
 
 function pesanAuth() {
   if (!ui.msg) {
