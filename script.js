@@ -1707,57 +1707,32 @@ function renderResetPassword() {
 }
 
 function renderRegister() {
-  const role = "siswa";
-
- const names = availableNames(role);
-
+  const role = ui.regRole || "siswa";
+  const names = availableNames(role);
   const draf = ui.authDraft || {};
+  const daftarBendahara = role === "bendahara";
 
   return `
     <div class="center-screen">
-
       <div class="auth-wrap">
-
         ${authAside()}
-
         <div class="auth-card">
-
           <div class="brand">
-
-            <div class="brand-mark">
-              TKJ
-            </div>
-
+            <div class="brand-mark">TKJ</div>
             <div class="brand-text">
-
-              <div class="t1">
-                Informasi Kas Kelas
-              </div>
-
-              <div class="t2">
-                Kelas X TKJT 1
-              </div>
-
+              <div class="t1">Informasi Kas Kelas</div>
+              <div class="t2">Kelas X TKJT 1</div>
             </div>
-
           </div>
 
-          <h1 class="auth-title">
-            Buat akun sendiri
-          </h1>
-
+          <h1 class="auth-title">Buat akun sendiri</h1>
           <p class="auth-sub">
-            Pilih nama sesuai data kelas, buat username, gunakan email yang aktif, lalu tentukan password.
-            Akun bendahara hanya dapat diaktifkan oleh administrator.
+            ${daftarBendahara
+              ? "Pilih nama dan jabatan bendahara yang sesuai. Setelah pendaftaran, administrator harus mengaktifkan akses bendahara berdasarkan email akun."
+              : "Pilih nama sesuai data kelas, buat username, gunakan email yang aktif, lalu tentukan password."}
           </p>
 
-          <div
-            class="tabs"
-            data-active="${role}"
-            role="group"
-            aria-label="Peran"
-          >
-
+          <div class="tabs" data-active="${role}" role="group" aria-label="Peran">
             <button
               type="button"
               data-act="regRole"
@@ -1768,157 +1743,64 @@ function renderRegister() {
               ${icon("siswa")}
               Siswa
             </button>
-
+            <button
+              type="button"
+              data-act="regRole"
+              data-val="bendahara"
+              class="${role === "bendahara" ? "active" : ""}"
+              aria-pressed="${role === "bendahara" ? "true" : "false"}"
+            >
+              ${icon("kunci")}
+              Bendahara
+            </button>
           </div>
 
           ${pesanAuth()}
 
-          <form
-            data-form="register"
-          >
-
-            <input
-              type="hidden"
-              name="role"
-              value="${role}"
-            >
+          <form data-form="register">
+            <input type="hidden" name="role" value="${role}">
 
             <div class="field">
-
-              <label for="reg-nama">
-                Nama sesuai data kelas
-              </label>
-
-              <select
-                id="reg-nama"
-                name="nama"
-                required
-              >
-
-                <option value="">
-                  ${
-                    names.length
-                      ? "Pilih nama..."
-                      : "Semua nama sudah terdaftar"
-                  }
-                </option>
-
-                ${names
-                  .map(
-                    (name) => `
-                      <option
-                        value="${esc(name)}"
-                        ${draf.nama === name ? "selected" : ""}
-                      >
-                        ${tampilNama(name)}
-                      </option>
-                    `,
-                  )
-                  .join("")}
-
+              <label for="reg-nama">${daftarBendahara ? "Nama bendahara sesuai jabatan" : "Nama sesuai data kelas"}</label>
+              <select id="reg-nama" name="nama" required>
+                <option value="">${names.length ? "Pilih nama..." : "Daftar nama kosong"}</option>
+                ${names.map((name) => `
+                  <option value="${esc(name)}" ${normalizedText(draf.nama) === normalizedText(name) ? "selected" : ""}>
+                    ${tampilNama(name)}${daftarBendahara ? ` — ${esc((BENDAHARA_MASTER.find((b) => normalizedText(b.nama) === normalizedText(name)) || {}).jabatan || "Bendahara")}` : ""}
+                  </option>
+                `).join("")}
               </select>
-
             </div>
 
             <div class="field">
-
-              <label for="reg-username">
-                Buat username
-              </label>
-
-              <input
-                id="reg-username"
-                name="username"
-                value="${esc(draf.username || "")}"
-                autocomplete="username"
-                autocapitalize="none"
-                spellcheck="false"
-                placeholder="Bebas, tanpa spasi"
-                required
-              >
-
+              <label for="reg-username">Buat username</label>
+              <input id="reg-username" name="username" value="${esc(draf.username || "")}" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="Bebas, tanpa spasi" required>
             </div>
 
             <div class="field">
-              <label for="reg-email">Email</label>
-              <input
-                id="reg-email"
-                name="email"
-                type="email"
-                value="${esc(draf.email || "")}"
-                autocomplete="email"
-                inputmode="email"
-                autocapitalize="none"
-                spellcheck="false"
-                placeholder="nama@email.com"
-                required
-              >
+              <label for="reg-email">Email aktif</label>
+              <input id="reg-email" name="email" type="email" value="${esc(draf.email || "")}" autocomplete="email" inputmode="email" autocapitalize="none" spellcheck="false" placeholder="nama@email.com" required>
             </div>
 
             <div class="field">
-
-              <label for="reg-password">
-                Buat password
-              </label>
-
-              <input
-                id="reg-password"
-                name="password"
-                type="password"
-                autocomplete="new-password"
-                minlength="6"
-                required
-              >
-
+              <label for="reg-password">Buat password</label>
+              <input id="reg-password" name="password" type="password" autocomplete="new-password" minlength="6" required>
             </div>
 
             <div class="field">
-
-              <label for="reg-password2">
-                Ulangi password
-              </label>
-
-              <input
-                id="reg-password2"
-                name="password2"
-                type="password"
-                autocomplete="new-password"
-                minlength="6"
-                required
-              >
-
+              <label for="reg-password2">Ulangi password</label>
+              <input id="reg-password2" name="password2" type="password" autocomplete="new-password" minlength="6" required>
             </div>
 
-            <button
-              class="
-                btn
-                btn-primary
-              "
-              type="submit"
-              ${names.length === 0 ? "disabled" : ""}
-            >
-              Buat akun
-            </button>
-
+            <button class="btn btn-primary" type="submit" ${names.length === 0 ? "disabled" : ""}>Buat akun</button>
           </form>
 
           <div class="switch-link">
-
             Sudah punya akun?
-
-            <button
-              type="button"
-              data-act="goLogin"
-            >
-              Masuk
-            </button>
-
+            <button type="button" data-act="goLogin">Masuk</button>
           </div>
-
         </div>
-
       </div>
-
     </div>
   `;
 }
@@ -5893,36 +5775,42 @@ async function doUpdatePassword(password, password2) {
 
 async function doRegister(role, nama, username, email, password, password2) {
   if (!supabaseSiap()) {
-    galatAuth("Supabase belum terkonfigurasi. Periksa URL dan publishable key.", { nama, username, email }, "email");
+    galatAuth("Supabase belum terkonfigurasi. Periksa URL dan publishable key.", { role, nama, username, email }, "email");
     return;
   }
-  if (role !== "siswa") {
-    galatAuth("Pendaftaran mandiri hanya untuk siswa. Akun bendahara harus diberi akses oleh administrator.", { nama, username, email }, "nama");
+
+  if (!["siswa", "bendahara"].includes(role)) {
+    galatAuth("Pilih peran yang valid.", { role, nama, username, email }, "nama");
     return;
   }
-  if (!nama || !SISWA_MASTER.some((x) => normalizedText(x) === normalizedText(nama))) {
-    galatAuth("Pilih nama yang ada di daftar kelas.", { nama, username, email }, "nama");
+
+  const namaValid = role === "bendahara"
+    ? BENDAHARA_MASTER.some((b) => normalizedText(b.nama) === normalizedText(nama))
+    : SISWA_MASTER.some((s) => normalizedText(s) === normalizedText(nama));
+
+  if (!nama || !namaValid) {
+    galatAuth("Pilih nama yang sesuai dengan peran yang dipilih.", { role, nama, username, email }, "nama");
     return;
   }
   if (!username || /\s/.test(username)) {
-    galatAuth("Username tidak boleh kosong atau mengandung spasi.", { nama, username, email }, "username");
+    galatAuth("Username tidak boleh kosong atau mengandung spasi.", { role, nama, username, email }, "username");
     return;
   }
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    galatAuth("Masukkan alamat email yang valid.", { nama, username, email }, "email");
+    galatAuth("Masukkan alamat email yang valid.", { role, nama, username, email }, "email");
     return;
   }
   if (password.length < 6) {
-    galatAuth("Password minimal 6 karakter.", { nama, username, email }, "password");
+    galatAuth("Password minimal 6 karakter.", { role, nama, username, email }, "password");
     return;
   }
   if (password !== password2) {
-    galatAuth("Konfirmasi password tidak sama.", { nama, username, email }, "password2");
+    galatAuth("Konfirmasi password tidak sama.", { role, nama, username, email }, "password2");
     return;
   }
 
   ui.msg = { type: "ok", text: "Membuat akun..." };
-  ui.authDraft = { nama, username, email };
+  ui.authDraft = { role, nama, username, email };
   render();
 
   const { data, error } = await supabaseClient.auth.signUp({
@@ -5935,7 +5823,26 @@ async function doRegister(role, nama, username, email, password, password2) {
   });
 
   if (error) {
-    galatAuth(error.message || "Akun gagal dibuat.", { nama, username, email }, "email");
+    galatAuth(error.message || "Akun gagal dibuat.", { role, nama, username, email }, "email");
+    return;
+  }
+
+  if (role === "bendahara") {
+    // A profile created by public signup is intentionally NOT granted privileged role.
+    // The project owner promotes it using the provided SQL template and the verified email.
+    if (data?.session) await supabaseClient.auth.signOut();
+    ui.authView = "login";
+    ui.authResetMode = false;
+    ui.loginTab = "bendahara";
+    ui.authDraft = { email };
+    ui.fokusAuth = "email";
+    ui.msg = {
+      type: "ok",
+      text: data?.session
+        ? "Akun bendahara berhasil dibuat. Minta administrator mengaktifkan jabatan untuk email ini di Supabase sebelum login."
+        : "Akun bendahara dibuat. Verifikasi email jika diminta, lalu minta administrator mengaktifkan jabatan akun di Supabase sebelum login.",
+    };
+    render();
     return;
   }
 
@@ -5946,7 +5853,7 @@ async function doRegister(role, nama, username, email, password, password2) {
       return;
     } catch (err) {
       await supabaseClient.auth.signOut();
-      galatAuth(err?.message || "Akun dibuat tetapi profil belum siap. Jalankan setup-supabase.sql.", { email }, "email");
+      galatAuth(err?.message || "Akun dibuat tetapi profil belum siap. Periksa setup Supabase.", { role, email }, "email");
       return;
     }
   }
