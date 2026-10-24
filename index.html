@@ -2,19 +2,36 @@
 <html lang="id">
   <head>
     <meta charset="UTF-8" />
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
     <title>Informasi Kas X TKJT 1</title>
+
     <meta name="theme-color" content="#f2f5f1" />
 
     <script>
+      /* Pasang tema sebelum halaman digambar supaya tidak berkedip terang
+         saat pengguna memakai tema gelap. Logika yang sama ada di script.js. */
       (function () {
         try {
           var t = localStorage.getItem("kastkjt1_theme_v1");
-          if (!t && window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) t = "dark";
+
+          if (
+            !t &&
+            window.matchMedia &&
+            window.matchMedia("(prefers-color-scheme: dark)").matches
+          ) {
+            t = "dark";
+          }
+
           if (t === "dark" || t === "light") {
             document.documentElement.setAttribute("data-theme", t);
+
             var m = document.querySelector('meta[name="theme-color"]');
-            if (m) m.setAttribute("content", t === "dark" ? "#0d1716" : "#f2f5f1");
+
+            if (m) {
+              m.setAttribute("content", t === "dark" ? "#0d1716" : "#f2f5f1");
+            }
           }
         } catch (e) {}
       })();
@@ -22,17 +39,25 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Lora:wght@600&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="style.css?v=20261024supabase1" />
+
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Lora:wght@600&display=swap"
+      rel="stylesheet"
+    />
+
+    <link rel="stylesheet" href="style.css?v=20261022ui" />
   </head>
+
   <body>
     <div id="app"></div>
+
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
-      // Publishable key memang digunakan di browser. Jangan pernah menaruh service_role/secret key di sini.
-      window.KAS_SUPABASE_URL = "https://nfcanvjnxixlhzdvnstl.supabase.co/";
+      // Isi dua nilai ini dari Supabase Dashboard > Project Settings > API.
+      // Gunakan Publishable key (atau anon key lama), JANGAN service_role/secret key.
+      window.KAS_SUPABASE_URL = "https://nfcanvjnxixlhzdvnstl.supabase.co";
       window.KAS_SUPABASE_PUBLISHABLE_KEY = "sb_publishable_-KR9D_QAELFGAlCgbxXe0w_PnKIfvqf";
     </script>
-    <script src="script.js?v=20261024supabase1"></script>
+    <script src="script.js?v=20261024bendahara1"></script>
   </body>
 </html>
