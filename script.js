@@ -1426,7 +1426,7 @@ function authAside() {
       />
     </aside>
   `;
-
+}
 
 function pesanAuth() {
   if (!ui.msg) {
