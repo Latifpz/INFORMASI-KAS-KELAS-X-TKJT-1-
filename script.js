@@ -1616,7 +1616,7 @@ function renderForgotPassword() {
 function renderRegister() {
   const role = ui.regRole;
 
-  const names = availableNames(role);
+ const names = availableName(role);
 
   const draf = ui.authDraft || {};
 
