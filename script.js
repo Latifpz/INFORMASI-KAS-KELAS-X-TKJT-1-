@@ -1418,12 +1418,12 @@ function render() {
 // Sisi kiri halaman masuk (layar lebar saja): papan nomor absen sebagai hiasan.
 function authAside() {
   return `
-    <aside class="auth-aside" aria-label="Foto kelas X TKJT 1">
-      <img
-        class="auth-class-photo"
-        src="login-left.jpg"
-        alt="Foto bersama kelas X TKJT 1"
-      />
+    <aside class="auth-aside" aria-hidden="true">
+      <div class="auth-photo-track">
+        <img src="login-background.jpg" alt="" draggable="false" />
+        <img src="login-background.jpg" alt="" draggable="false" />
+      </div>
+      <div class="auth-photo-shade"></div>
     </aside>
   `;
 }
