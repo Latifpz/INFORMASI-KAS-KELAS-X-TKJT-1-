@@ -2190,3 +2190,178 @@ body::before {
     padding: 27px 20px 30px !important;
   }
 }
+
+
+/* =========================================================
+   LOGIN BACKGROUND: CONTINUOUS VERTICAL PHOTO LOOP
+   ========================================================= */
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  position: relative !important;
+  isolation: isolate !important;
+  background-color: #101615 !important;
+  background-image: none !important;
+}
+
+/* Disable the previous static photo layer; the animated track below replaces it. */
+body::before {
+  content: none !important;
+  display: none !important;
+  background-image: none !important;
+  filter: none !important;
+  -webkit-filter: none !important;
+}
+
+#app {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+}
+
+.center-screen {
+  position: relative !important;
+  isolation: isolate !important;
+  z-index: 0 !important;
+  min-height: 100vh !important;
+  background: transparent !important;
+}
+
+/* The existing authAside() emits this background only on login/register/recovery screens. */
+.auth-wrap {
+  position: relative !important;
+  z-index: 1 !important;
+  width: min(440px, 100%) !important;
+  min-height: 0 !important;
+  display: block !important;
+  overflow: visible !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+.auth-aside {
+  display: block !important;
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  min-height: 100vh !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  background: #101615 !important;
+  filter: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+.auth-photo-track {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: 100%;
+  height: max-content;
+  opacity: 0.42;
+  animation: tkjtContinuousPhotoScroll 48s linear infinite;
+  will-change: transform;
+  filter: none !important;
+}
+
+.auth-photo-track img {
+  display: block !important;
+  flex: 0 0 auto !important;
+  width: 100% !important;
+  height: auto !important;
+  max-width: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  object-fit: initial !important;
+  filter: none !important;
+  transform: none !important;
+}
+
+.auth-photo-shade,
+.auth-aside::after {
+  display: block !important;
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: rgba(10, 15, 19, 0.18);
+  pointer-events: none;
+  filter: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+@keyframes tkjtContinuousPhotoScroll {
+  from { transform: translateY(0); }
+  to { transform: translateY(-50%); }
+}
+
+.auth-card {
+  position: relative !important;
+  z-index: 2 !important;
+  width: 100% !important;
+  height: auto !important;
+  min-height: 0 !important;
+  border-radius: 22px !important;
+  padding: 34px 32px !important;
+  background: rgba(255, 255, 255, 0.62) !important;
+  border: 1px solid rgba(255, 255, 255, 0.45) !important;
+  box-shadow: 0 12px 34px rgba(16, 24, 40, 0.18) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  filter: none !important;
+}
+
+:root[data-theme="dark"] .auth-card {
+  background: rgba(16, 24, 32, 0.64) !important;
+  border-color: rgba(255, 255, 255, 0.16) !important;
+}
+
+@media (max-width: 860px) {
+  .center-screen {
+    padding: 18px 14px !important;
+    align-items: center !important;
+  }
+  .auth-wrap {
+    width: min(440px, 100%) !important;
+    max-width: 440px !important;
+    margin: auto !important;
+  }
+  .auth-card {
+    padding: 30px 24px !important;
+  }
+  .auth-photo-track {
+    opacity: 0.36;
+    animation-duration: 54s;
+  }
+}
+
+@media (max-width: 520px) {
+  .center-screen {
+    min-height: 100vh !important;
+    padding: 16px 12px !important;
+  }
+  .auth-wrap { width: 100% !important; }
+  .auth-card { padding: 27px 20px 30px !important; }
+  .auth-photo-track { opacity: 0.33; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-photo-track { animation: none; }
+}
