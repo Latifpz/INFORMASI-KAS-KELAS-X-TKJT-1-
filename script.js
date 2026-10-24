@@ -203,6 +203,17 @@ function supabaseSiap() {
   return Boolean(supabaseClient);
 }
 
+async function pesanErrorFungsi(error, fallback) {
+  try {
+    const response = error && error.context;
+    if (response && typeof response.json === "function") {
+      const payload = await response.json();
+      if (payload && payload.error) return String(payload.error);
+    }
+  } catch (_) {}
+  return String(error && error.message ? error.message : fallback);
+}
+
 // Supabase Auth requires an email identifier internally. This application uses
 // a random non-deliverable alias, while users only see and enter their username.
 // Keep the alias in public.users.email and resolve it through lookup_login_email().
@@ -5650,28 +5661,31 @@ async function doLogin(role, username, password) {
   render();
 
   try {
-    // This RPC returns only a synthetic internal Auth alias, never a personal email.
-    const { data: internalEmail, error: lookupError } = await supabaseClient.rpc(
-      "lookup_login_email",
-      { p_username: username },
+    // Edge Function resolves the username without exposing personal email addresses.
+    // It also safely migrates older Auth accounts to a non-deliverable internal alias.
+    const { data: lookup, error: lookupError } = await supabaseClient.functions.invoke(
+      "username-register",
+      { body: { action: "lookup", username } },
     );
-    if (lookupError) throw lookupError;
-    if (!internalEmail) {
+    if (lookupError) {
+      galatAuth(await pesanErrorFungsi(lookupError, "Username tidak dapat diperiksa."), { username }, "username");
+      return;
+    }
+    if (lookup && lookup.error) {
+      galatAuth(String(lookup.error), { username }, "username");
+      return;
+    }
+    if (!lookup || !lookup.email) {
       galatAuth("Username belum terdaftar. Buat akun terlebih dahulu.", { username }, "username");
       return;
     }
 
     const { data, error } = await supabaseClient.auth.signInWithPassword({
-      email: internalEmail,
+      email: lookup.email,
       password,
     });
     if (error || !data?.user) {
-      const message = String(error?.message || "");
-      if (/email not confirmed/i.test(message)) {
-        galatAuth("Login belum aktif karena konfirmasi email masih diwajibkan. Minta administrator menonaktifkan Confirm email, reset akun lama, lalu daftar ulang.", { username }, "username");
-      } else {
-        galatAuth("Username atau password salah.", { username }, "username");
-      }
+      galatAuth("Username atau password salah.", { username }, "username");
       return;
     }
 
@@ -5777,42 +5791,23 @@ async function doRegister(role, nama, username, password, password2) {
   ui.authDraft = { role, nama, username };
   render();
 
-  // Supabase Auth requires an email-shaped identifier internally. It is randomly
-  // generated, cannot receive email, and is never shown to the user.
-  const internalEmail = emailInternalAuth();
-  const { data, error } = await supabaseClient.auth.signUp({
-    email: internalEmail,
-    password,
-    options: {
-      data: { nama, username },
-    },
-  });
+  // The server creates a confirmed Auth account with an internal alias. The user
+  // only supplies a class name, username, and password; no email is requested.
+  const { data: registration, error: registerError } = await supabaseClient.functions.invoke(
+    "username-register",
+    { body: { action: "register", role, nama, username, password, password2 } },
+  );
 
-  if (error) {
-    const lower = String(error.message || "").toLowerCase();
-    const friendly = /duplicate key|already registered|already exists|username|unique constraint/.test(lower)
-      ? "Nama atau username sudah dipakai akun lain. Pilih nama yang belum terdaftar atau periksa akun lama."
-      : (error.message || "Akun gagal dibuat.");
-    galatAuth(friendly, { role, nama, username }, "username");
+  if (registerError) {
+    galatAuth(await pesanErrorFungsi(registerError, "Akun gagal dibuat."), { role, nama, username }, "username");
     return;
   }
-
-  if (!data?.session || !data?.user) {
-    ui.authView = "login";
-    ui.authResetMode = false;
-    ui.loginTab = role;
-    ui.authDraft = { username };
-    ui.fokusAuth = "username";
-    ui.msg = {
-      type: "error",
-      text: "Supabase masih meminta verifikasi email. Karena aplikasi memakai username saja, administrator harus menonaktifkan Authentication → Sign In / Providers → Email → Confirm email, lalu hapus akun yang baru dibuat dan daftar ulang.",
-    };
-    render();
+  if (!registration || registration.error || !registration.email) {
+    galatAuth(String(registration?.error || "Akun gagal dibuat."), { role, nama, username }, "username");
     return;
   }
 
   if (role === "bendahara") {
-    await supabaseClient.auth.signOut();
     ui.authView = "login";
     ui.authResetMode = false;
     ui.loginTab = "bendahara";
@@ -5820,18 +5815,27 @@ async function doRegister(role, nama, username, password, password2) {
     ui.fokusAuth = "username";
     ui.msg = {
       type: "ok",
-      text: "Akun berhasil dibuat. Administrator perlu mengaktifkan jabatan bendahara melalui SQL aktivasi berdasarkan username sebelum akun ini dapat membuka dashboard bendahara.",
+      text: "Akun berhasil dibuat. Akses bendahara perlu diaktifkan administrator berdasarkan username sebelum login dashboard bendahara.",
     };
     render();
     return;
   }
 
+  const { data: loginData, error: loginError } = await supabaseClient.auth.signInWithPassword({
+    email: registration.email,
+    password,
+  });
+  if (loginError || !loginData?.user) {
+    galatAuth("Akun berhasil dibuat, tetapi login otomatis gagal. Coba masuk menggunakan username dan password yang baru dibuat.", { username }, "username");
+    return;
+  }
+
   try {
-    await aktivasiPenggunaAuth(data.user, "siswa");
+    await aktivasiPenggunaAuth(loginData.user, "siswa");
     showToast("Akun berhasil dibuat. Dashboard sudah terbuka.");
   } catch (err) {
     await supabaseClient.auth.signOut();
-    galatAuth(err?.message || "Akun dibuat, tetapi profil belum siap. Periksa reset-username-login.sql.", { role, nama, username }, "username");
+    galatAuth(err?.message || "Akun dibuat, tetapi profil belum siap. Periksa konfigurasi Supabase.", { role, nama, username }, "username");
   }
 }
 
