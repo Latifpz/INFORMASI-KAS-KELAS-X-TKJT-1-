@@ -184,34 +184,6 @@ const SESSION_KEY = "kastkjt1_session_v3";
 
 const THEME_KEY = "kastkjt1_theme_v1";
 
-/* ============================================================
-   SUPABASE AUTH - LUPA PASSWORD
-   Password tetap dikelola Supabase Auth, bukan localStorage.
-============================================================ */
-
-const SUPABASE_URL = window.KAS_SUPABASE_URL || "";
-const SUPABASE_PUBLISHABLE_KEY =
-  window.KAS_SUPABASE_PUBLISHABLE_KEY || "";
-
-const supabaseClient =
-  window.supabase && SUPABASE_URL && SUPABASE_PUBLISHABLE_KEY
-    ? window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY)
-    : null;
-
-function supabaseSiap() {
-  return Boolean(supabaseClient);
-}
-
-function isRecoveryUrl() {
-  return new URLSearchParams(window.location.search).get("reset") === "1";
-}
-
-function clearRecoveryUrl() {
-  const url = new URL(window.location.href);
-  url.searchParams.delete("reset");
-  window.history.replaceState({}, document.title, url.pathname + url.search + url.hash);
-}
-
 function defaultDB() {
   return {
     accounts: [],
@@ -749,7 +721,7 @@ function periodeAktif(pos) {
   };
 }
 
-// Sudahkah siswa membayar pada periode tertentu ({ 
+// Sudahkah siswa membayar pada periode tertentu ({ frek, key })?
 function sudahBayarPeriode(pos, siswa, periode) {
   return DB.kasMasuk.some((x) => {
     if (normalizedText(x.pos) !== normalizedText(pos)) return false;
@@ -847,9 +819,7 @@ function pengingatTerkirim(pos, nama) {
 
   return DB.notifikasi.find(
     (n) =>
-      n.pos === pos &&
-      n.periode === key &&
-      normalizedText(n.untuk) === target,
+      n.pos === pos && n.periode === key && normalizedText(n.untuk) === target,
   );
 }
 
@@ -1173,9 +1143,9 @@ function showToast(text) {
 let ui = {
   authView: "login",
 
-  authResetMode: false,
-
   loginTab: "siswa",
+
+  forgotStep: 1,
 
   regRole: "siswa",
 
@@ -1348,14 +1318,9 @@ function renderAuth() {
     </button>
   `;
 
-  return fab +
-    (ui.authResetMode
-      ? renderResetPassword()
-      : ui.authView === "register"
-        ? renderRegister()
-        : ui.authView === "forgot"
-          ? renderForgotPassword()
-          : renderLogin());
+  if (ui.authView === "forgot") return fab + renderForgotPassword();
+
+  return fab + (ui.authView === "register" ? renderRegister() : renderLogin());
 }
 
 function renderLogin() {
@@ -1495,15 +1460,7 @@ function renderLogin() {
           </form>
 
           <div class="switch-link">
-
-            <button
-              type="button"
-              data-act="forgotPassword"
-              class="auth-forgot"
-            >
-              Lupa password?
-            </button>
-
+            <button type="button" data-act="goForgot">Lupa password?</button>
           </div>
 
           <div class="switch-link">
@@ -1527,120 +1484,133 @@ function renderLogin() {
   `;
 }
 
-function renderForgotPassword() {
-  return `
-    <div class="center-screen">
-      <div class="auth-wrap">
-        ${authAside()}
-        <div class="auth-card">
-          <div class="brand">
-            <div class="brand-mark">TKJ</div>
-            <div class="brand-text">
-              <div class="t1">Informasi Kas Kelas X TKJT 1</div>
-              <div class="t2">Kelas Teknik Jaringan</div>
-            </div>
-          </div>
-
-          <h1 class="auth-title">Lupa password</h1>
-          <p class="auth-sub">
-            Masukkan email akunmu. Supabase akan mengirimkan link untuk membuat password baru.
-          </p>
-
-          ${pesanAuth()}
-
-          <form data-form="forgotPassword">
-            <div class="field">
-              <label for="forgot-email">Email</label>
-              <input
-                id="forgot-email"
-                name="email"
-                type="email"
-                autocomplete="email"
-                inputmode="email"
-                placeholder="nama@email.com"
-                required
-              >
-            </div>
-
-            <button class="btn btn-primary" type="submit">
-              Kirim link reset password
-            </button>
-          </form>
-
-          <div class="switch-link">
-            <button type="button" data-act="goLogin">Kembali ke login</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  `;
-}
-
-function renderResetPassword() {
-  return `
-    <div class="center-screen">
-      <div class="auth-wrap">
-        ${authAside()}
-        <div class="auth-card">
-          <div class="brand">
-            <div class="brand-mark">TKJ</div>
-            <div class="brand-text">
-              <div class="t1">Informasi Kas Kelas X TKJT 1</div>
-              <div class="t2">Kelas Teknik Jaringan</div>
-            </div>
-          </div>
-
-          <h1 class="auth-title">Buat password baru</h1>
-          <p class="auth-sub">
-            Masukkan password baru untuk menyelesaikan pemulihan akun.
-          </p>
-
-          ${pesanAuth()}
-
-          <form data-form="updatePassword">
-            <div class="field">
-              <label for="reset-password">Password baru</label>
-              <input
-                id="reset-password"
-                name="password"
-                type="password"
-                autocomplete="new-password"
-                placeholder="Minimal 6 karakter"
-                minlength="6"
-                required
-              >
-            </div>
-
-            <div class="field">
-              <label for="reset-password2">Ulangi password baru</label>
-              <input
-                id="reset-password2"
-                name="password2"
-                type="password"
-                autocomplete="new-password"
-                placeholder="Ulangi password"
-                minlength="6"
-                required
-              >
-            </div>
-
-            <button class="btn btn-primary" type="submit">
-              Simpan password baru
-            </button>
-          </form>
-        </div>
-      </div>
-    </div>
-  `;
-}
-
-function availableName (role) {
+function availableNames(role) {
   const master =
     role === "bendahara" ? BENDAHARA_MASTER.map((b) => b.nama) : SISWA_MASTER;
 
   const taken = DB.accounts.filter((a) => a.role === role).map((a) => a.nama);
 
   return master.filter((name) => !taken.includes(name));
+}
+
+function renderForgotPassword() {
+  const draf = ui.authDraft || {};
+
+  return `
+    <div class="center-screen">
+
+      <div class="auth-wrap">
+
+        ${authAside()}
+
+        <div class="auth-card">
+
+          <div class="brand">
+            <div class="brand-mark">TKJ</div>
+            <div class="brand-text">
+              <div class="t1">Informasi Kas Kelas X TKJT 1</div>
+              <div class="t2">Pemulihan akun</div>
+            </div>
+          </div>
+
+          <h1 class="auth-title">Lupa password?</h1>
+
+          <p class="auth-sub">
+            Masukkan data akun untuk memverifikasi kepemilikan akun,
+            lalu buat password baru.
+          </p>
+
+          ${pesanAuth()}
+
+          <form data-form="forgotPassword">
+
+            <div class="field">
+              <label for="forgot-role">Peran</label>
+              <select id="forgot-role" name="role" required>
+                <option value="siswa" ${draf.role === "siswa" ? "selected" : ""}>Siswa</option>
+                <option value="bendahara" ${draf.role === "bendahara" ? "selected" : ""}>Bendahara</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="forgot-username">Username</label>
+              <input
+                id="forgot-username"
+                name="username"
+                value="${esc(draf.username || "")}"
+                autocomplete="username"
+                autocapitalize="none"
+                spellcheck="false"
+                placeholder="Username akun"
+                required
+              >
+            </div>
+
+            <div class="field">
+              <label for="forgot-nama">Nama sesuai akun</label>
+              <input
+                id="forgot-nama"
+                name="nama"
+                value="${esc(draf.nama || "")}"
+                autocomplete="name"
+                placeholder="Nama yang dipilih saat membuat akun"
+                required
+              >
+            </div>
+
+            <div class="form-row cols-2">
+              <div class="field">
+                <label for="forgot-password">Password baru</label>
+                <input
+                  id="forgot-password"
+                  name="password"
+                  type="password"
+                  autocomplete="new-password"
+                  minlength="4"
+                  placeholder="Minimal 4 karakter"
+                  required
+                >
+              </div>
+
+              <div class="field">
+                <label for="forgot-password2">Ulangi password</label>
+                <input
+                  id="forgot-password2"
+                  name="password2"
+                  type="password"
+                  autocomplete="new-password"
+                  minlength="4"
+                  placeholder="Ulangi password"
+                  required
+                >
+              </div>
+            </div>
+
+            <div class="locked-note">
+              ${icon("kunci")}
+              <span>
+                Pemulihan ini bekerja pada data akun yang tersimpan di perangkat
+                ini. Jika aplikasi dipindahkan ke perangkat lain, data akun juga
+                harus tersedia di perangkat tersebut.
+              </span>
+            </div>
+
+            <button class="btn btn-primary" type="submit">
+              ${icon("kunci")}
+              Simpan password baru
+            </button>
+
+          </form>
+
+          <div class="switch-link">
+            Ingat password?
+            <button type="button" data-act="goLogin">Kembali ke masuk</button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  `;
 }
 
 function renderRegister() {
@@ -2568,8 +2538,7 @@ function statusPembayaranBlock(pos) {
     no: i + 1,
     sudah: lunas.has(name),
   })).filter(
-    (r) =>
-      filter === "semua" || (filter === "belum" ? !r.sudah : r.sudah),
+    (r) => filter === "semua" || (filter === "belum" ? !r.sudah : r.sudah),
   );
 
   const barisSiswa = daftar
@@ -3445,7 +3414,7 @@ function pagePengeluaran() {
                 <button
                   class="
                     btn
-                   btn-primary
+                    btn-primary
                   "
                   type="submit"
                 >
@@ -5163,11 +5132,11 @@ function onAction(e) {
     return;
   }
 
-  if (act === "forgotPassword") {
+  if (act === "goForgot") {
     ui.authView = "forgot";
-    ui.authResetMode = false;
-    ui.authDraft = null;
+    ui.authDraft = { role: ui.loginTab || "siswa" };
     ui.msg = null;
+    ui.fokusAuth = null;
     render();
     return;
   }
@@ -5186,8 +5155,8 @@ function onAction(e) {
 
   if (act === "goLogin") {
     ui.authView = "login";
-    ui.authResetMode = false;
     ui.authDraft = null;
+    ui.forgotStep = 1;
 
     ui.msg = null;
 
@@ -5306,7 +5275,7 @@ function onAction(e) {
     return;
   }
 
-  if (act  === "kirimPengingat") {
+  if (act === "kirimPengingat") {
     kirimPengingat(el.dataset.nama);
 
     return;
@@ -5572,12 +5541,13 @@ function onSubmit(e) {
   }
 
   if (type === "forgotPassword") {
-    doForgotPassword(val("email"));
-    return;
-  }
-
-  if (type === "updatePassword") {
-    doUpdatePassword(val("password"), val("password2"));
+    doResetPassword(
+      val("role"),
+      val("username"),
+      val("nama"),
+      val("password"),
+      val("password2"),
+    );
     return;
   }
 
@@ -5643,85 +5613,6 @@ function onSubmit(e) {
 /* ============================================================
    LOGIN / REGISTER
 ============================================================ */
-
-async function doForgotPassword(email) {
-  if (!email) {
-    ui.msg = { type: "error", text: "Masukkan email terlebih dahulu." };
-    render();
-    return;
-  }
-
-  if (!supabaseSiap()) {
-    ui.msg = {
-      type: "error",
-      text: "Supabase Auth belum dikonfigurasi. Isi URL dan Publishable key di index.html.",
-    };
-    render();
-    return;
-  }
-
-  ui.msg = null;
-  render();
-
-  const redirectTo =
-    window.location.origin +
-    window.location.pathname +
-    "?reset=1";
-
-  const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
-    redirectTo,
-  });
-
-  if (error) {
-    ui.msg = { type: "error", text: error.message || "Gagal mengirim email reset." };
-  } else {
-    ui.msg = {
-      type: "ok",
-      text: "Link reset password sudah dikirim. Cek email dan folder spam.",
-    };
-  }
-
-  render();
-}
-
-async function doUpdatePassword(password, password2) {
-  if (!password || password.length < 6) {
-    ui.msg = { type: "error", text: "Password baru minimal 6 karakter." };
-    render();
-    return;
-  }
-
-  if (password !== password2) {
-    ui.msg = { type: "error", text: "Konfirmasi password tidak sama." };
-    render();
-    return;
-  }
-
-  if (!supabaseSiap()) {
-    ui.msg = { type: "error", text: "Supabase Auth belum dikonfigurasi." };
-    render();
-    return;
-  }
-
-  const { error } = await supabaseClient.auth.updateUser({ password });
-
-  if (error) {
-    ui.msg = { type: "error", text: error.message || "Gagal mengubah password." };
-    render();
-    return;
-  }
-
-  await supabaseClient.auth.signOut();
-  clearRecoveryUrl();
-  ui.authResetMode = false;
-  ui.authView = "login";
-  ui.authDraft = null;
-  ui.msg = {
-    type: "ok",
-    text: "Password berhasil diubah. Silakan login dengan password baru.",
-  };
-  render();
-}
 
 function findAccount(username) {
   return DB.accounts.find(
@@ -5826,6 +5717,68 @@ function doLogout() {
   render();
 }
 
+function doResetPassword(role, username, nama, password, password2) {
+  if (!username || !nama) {
+    galatAuth(
+      "Username dan nama wajib diisi.",
+      { role, username, nama },
+      !username ? "username" : "nama",
+    );
+    return;
+  }
+
+  if (password.length < 4) {
+    galatAuth(
+      "Password baru minimal 4 karakter.",
+      { role, username, nama },
+      "password",
+    );
+    return;
+  }
+
+  if (password !== password2) {
+    galatAuth(
+      "Konfirmasi password baru tidak sama.",
+      { role, username, nama },
+      "password2",
+    );
+    return;
+  }
+
+  const account = findAccount(username);
+
+  if (
+    !account ||
+    account.role !== role ||
+    String(account.nama || "")
+      .trim()
+      .toLowerCase() !==
+      String(nama || "")
+        .trim()
+        .toLowerCase()
+  ) {
+    galatAuth(
+      "Data akun tidak cocok. Periksa peran, username, dan nama.",
+      { role, username, nama },
+      "username",
+    );
+    return;
+  }
+
+  account.passHash = hashPass(password);
+  saveDB();
+
+  ui.authView = "login";
+  ui.loginTab = role;
+  ui.authDraft = { username };
+  ui.fokusAuth = "username";
+  ui.msg = {
+    type: "ok",
+    text: "Password berhasil diubah. Silakan masuk dengan password baru.",
+  };
+  render();
+}
+
 function doRegister(role, nama, username, password, password2) {
   if (!nama) {
     galatAuth("Pilih nama.", { nama, username }, "nama");
@@ -5834,7 +5787,11 @@ function doRegister(role, nama, username, password, password2) {
   }
 
   if (!username || /\s/.test(username)) {
-    galatAuth("Username tidak boleh mengandung spasi.", { nama, username }, "username");
+    galatAuth(
+      "Username tidak boleh mengandung spasi.",
+      { nama, username },
+      "username",
+    );
 
     return;
   }
@@ -5852,7 +5809,11 @@ function doRegister(role, nama, username, password, password2) {
   }
 
   if (password !== password2) {
-    galatAuth("Konfirmasi password tidak sama.", { nama, username }, "password2");
+    galatAuth(
+      "Konfirmasi password tidak sama.",
+      { nama, username },
+      "password2",
+    );
 
     return;
   }
@@ -6448,9 +6409,9 @@ function renderConfirmDialog() {
 
         </div>
 
-      </div> 
-
       </div>
+
+    </div>
   `;
 
   document.body.appendChild(wrap);
@@ -6587,24 +6548,3 @@ document.addEventListener("visibilitychange", () => {
 });
 
 window.addEventListener("focus", cekPergantianPeriode);
-
-
-/* ============================================================
-   SUPABASE PASSWORD RECOVERY BOOTSTRAP
-============================================================ */
-
-if (isRecoveryUrl()) {
-  ui.authResetMode = true;
-  ui.authView = "login";
-}
-
-if (supabaseSiap()) {
-  supabaseClient.auth.onAuthStateChange((event) => {
-    if (event === "PASSWORD_RECOVERY") {
-      ui.authResetMode = true;
-      ui.msg = null;
-      render();
-    }
-  });
-                        }
-      
