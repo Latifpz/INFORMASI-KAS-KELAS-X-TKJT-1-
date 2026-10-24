@@ -2053,112 +2053,140 @@ PRINT
 }
 
 
-/* =========================================
-   AUTH BACKGROUND: full-screen class photo
-   Photo is intentionally clear (no blur/filter),
-   with a translucent tint so the login form remains readable.
-========================================= */
+/* =========================================================
+   LOGIN BACKGROUND FIX v20261024-2
+   Foto kelas memenuhi seluruh viewport, sedikit transparan,
+   tanpa blur, tanpa vignette/gradient pada pinggir gambar.
+   ========================================================= */
+html,
 body {
-  background:
-    linear-gradient(rgba(245, 247, 244, 0.57), rgba(245, 247, 244, 0.57)),
-    url("login-left.jpg") center center / cover no-repeat fixed !important;
+  min-height: 100%;
+}
+
+body {
+  position: relative !important;
+  isolation: isolate !important;
+  background-color: #b7b39d !important;
+  background-image: none !important;
+}
+
+body::before {
+  content: "" !important;
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: -1 !important;
+  display: block !important;
+  pointer-events: none !important;
+  background-image: url("login-left.jpg") !important;
+  background-position: center center !important;
+  background-repeat: no-repeat !important;
+  background-size: cover !important;
+  opacity: 0.68 !important;
+  filter: none !important;
+  -webkit-filter: none !important;
+  transform: none !important;
+  box-shadow: none !important;
 }
 
 :root[data-theme="dark"] body {
-  background:
-    linear-gradient(rgba(10, 17, 32, 0.62), rgba(10, 17, 32, 0.62)),
-    url("login-left.jpg") center center / cover no-repeat fixed !important;
+  background-color: #111827 !important;
 }
 
+:root[data-theme="dark"] body::before {
+  opacity: 0.52 !important;
+}
+
+/* Pastikan semua pembungkus halaman tidak menutup foto. */
 .center-screen {
-  position: relative;
-  z-index: 1;
-  min-height: 100vh;
-  padding: 24px 16px;
+  position: relative !important;
+  z-index: 0 !important;
+  min-height: 100vh !important;
+  background: transparent !important;
 }
 
-/* The photo is now a page background, not a separate left-side panel. */
-.auth-aside {
-  display: none !important;
-}
-
-.auth-wrap {
-  width: min(440px, 100%);
-  min-height: 0;
-  display: block;
-  overflow: visible;
-  border-radius: 0;
-  background: transparent;
-  border: 0;
-  box-shadow: none;
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-}
-
-.auth-card {
-  width: 100%;
-  height: auto;
-  min-height: 0;
-  padding: 36px 34px;
-  border-radius: 24px;
-  background: rgba(255, 255, 255, 0.87);
-  border: 1px solid rgba(255, 255, 255, 0.86);
-  box-shadow: 0 14px 44px rgba(16, 24, 40, 0.20);
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-}
-
-:root[data-theme="dark"] .auth-card {
-  background: rgba(20, 27, 44, 0.88);
-  border-color: rgba(255, 255, 255, 0.14);
-  box-shadow: 0 14px 44px rgba(0, 0, 0, 0.32);
-}
-
-/* The image itself has no blur, gradient edge, or filter. */
+.auth-aside,
 .auth-class-photo,
 .auth-aside::after {
+  display: none !important;
   filter: none !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
+}
+
+.auth-wrap {
+  width: min(440px, 100%) !important;
+  min-height: 0 !important;
+  display: block !important;
+  overflow: visible !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+.auth-card {
+  width: 100% !important;
+  height: auto !important;
+  min-height: 0 !important;
+  border-radius: 22px !important;
+  padding: 34px 32px !important;
+  background: rgba(255, 255, 255, 0.58) !important;
+  border: 1px solid rgba(255, 255, 255, 0.48) !important;
+  box-shadow: 0 12px 34px rgba(16, 24, 40, 0.16) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+:root[data-theme="dark"] .auth-card {
+  background: rgba(20, 27, 44, 0.62) !important;
+  border-color: rgba(255, 255, 255, 0.14) !important;
+  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.28) !important;
+}
+
+/* Hilangkan efek blur/vignette dari elemen generik yang pernah dipakai. */
+.net-bg,
+.net-bg::before,
+.net-bg::after,
+.blob,
+.blob1,
+.blob2,
+.blob3 {
   display: none !important;
+  filter: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 
 @media (max-width: 860px) {
   .center-screen {
-    padding: 18px 14px;
-    align-items: center;
+    padding: 18px 14px !important;
+    align-items: center !important;
   }
-
   .auth-wrap {
-    width: min(440px, 100%);
-    max-width: 440px;
-    min-height: 0;
-    margin: auto;
-    display: block;
+    width: min(440px, 100%) !important;
+    max-width: 440px !important;
+    margin: auto !important;
   }
-
   .auth-card {
-    height: auto;
-    padding: 30px 26px;
-    border-radius: 22px;
+    padding: 30px 24px !important;
   }
 }
 
 @media (max-width: 520px) {
+  body::before {
+    background-position: center center !important;
+    background-size: cover !important;
+  }
   .center-screen {
-    min-height: 100vh;
-    padding: 16px 12px;
-    align-items: center;
+    min-height: 100vh !important;
+    padding: 16px 12px !important;
   }
-
   .auth-wrap {
-    width: 100%;
-    min-height: 0;
-    border-radius: 0;
+    width: 100% !important;
   }
-
   .auth-card {
-    padding: 28px 22px 30px;
-    border-radius: 22px;
+    padding: 27px 20px 30px !important;
   }
 }
